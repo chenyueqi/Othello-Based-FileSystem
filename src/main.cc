@@ -15,4 +15,9 @@ int main()
     fprintf(stderr, "%u\n", s.getServerCapacity());
     fprintf(stderr, "%u\n", s.getAvailableCapacity());
     fprintf(stderr, "%u\n", s.getUsedCapacity());
+    uint16_t temp1 = 0;
+    bool temp2 = true;
+    s.addDirectoryFileEntry("/home/user/foo/bar", temp1, temp2);
+    s.addDirectoryFileEntry("/home/user/foo/chenyueqi", temp1, temp2);
+    s.listDirectory("/home/user/foo");
 }

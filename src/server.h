@@ -7,6 +7,8 @@
 #include<ctime>
 #include<map>
 #include<vector>
+#include<sstream>
+
 using namespace std;
 
 
@@ -29,14 +31,14 @@ class DirectoryFile
 	map<string, DirectoryFileEntry> dir;
     public:
 	DirectoryFile(){}
-	bool queryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile);
-	bool deleteFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile);
-	bool addFileEntry(string fileName, uint16_t serverNum, bool directoryOrFile);
-	bool listFileEntry();
+	bool queryDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile);
+	bool deleteDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile);
+	bool addDirectoryFileEntry(string fileName, uint16_t serverNum, bool directoryOrFile);
+	bool listDirectoryFileEntry();
 
 };
 
-bool DirectoryFile::queryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile)
+bool DirectoryFile::queryDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile)
 {
     map<string, DirectoryFileEntry>::iterator iter = dir.find(fileName);
     if(iter == dir.end())
@@ -49,7 +51,7 @@ bool DirectoryFile::queryFileEntry(string fileName, uint16_t& serverNum, bool& d
     }
 }
 
-bool DirectoryFile::deleteFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile)
+bool DirectoryFile::deleteDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile)
 {
     map<string, DirectoryFileEntry>::iterator iter = dir.find(fileName);
     if(iter == dir.end())
@@ -64,10 +66,10 @@ bool DirectoryFile::deleteFileEntry(string fileName, uint16_t& serverNum, bool& 
     return false;
 }
 
-bool DirectoryFile::addFileEntry(string fileName, uint16_t serverNum, bool directoryOrFile)
+bool DirectoryFile::addDirectoryFileEntry(string fileName, uint16_t serverNum, bool directoryOrFile)
 {
     map<string, DirectoryFileEntry>::iterator iter = dir.find(fileName);
-    if(iter == dir.end())
+    if(iter != dir.end())
 	return true;
     else
     {
@@ -78,18 +80,19 @@ bool DirectoryFile::addFileEntry(string fileName, uint16_t serverNum, bool direc
     return false;
 }
 
-bool DirectoryFile::listFileEntry()
+bool DirectoryFile::listDirectoryFileEntry()
 {
+    fprintf(stderr, "BEGIN\n");
     for(map<string, DirectoryFileEntry>::iterator iter = dir.begin(); iter != dir.end(); iter++)
     {
 	fprintf(stderr, "%s\t", iter->first.c_str());
 	if(iter->second.getEntryAttribute() == true)
 	    fprintf(stderr, "directory\t");
 	else
-	    fprintf(stderr, "file\n");
-	fprintf(stderr, "%u\t", iter->second.getServerNum());
-
+	    fprintf(stderr, "file\t");
+	fprintf(stderr, "%u\n", iter->second.getServerNum());
     }
+    fprintf(stderr, "END\n");
 }
 
 class Server
@@ -118,8 +121,49 @@ class Server
 	uint64_t getAvailableCapacity(){return availCapacity;}
 	uint64_t getUsedCapacity(){return usedCapacity;}
 
+	bool addDirectoryFileEntry(string fileName, uint16_t &serverNum, bool &directoryOrFile);//XXX should be private , to test for public
+
+	bool listDirectory(string directoryName);
+
 	//XXX
 	uint16_t  getMessage(const string inst, const string path, const uint16_t attach); // message interface
 };
+
+
+bool Server::addDirectoryFileEntry(string fileName, uint16_t &serverNum, bool &directoryOrFile)
+{
+    int i = 0;
+    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
+
+    string directoryName = fileName.substr(0, i);
+
+    map<string, DirectoryFile>::iterator iter = directoryFile.find(directoryName);
+    if(iter == directoryFile.end())
+    {
+	DirectoryFile* newDirectoryFile = new DirectoryFile();
+	directoryFile.insert(pair<string, DirectoryFile>(directoryName, *newDirectoryFile));
+	iter = directoryFile.find(directoryName);
+    }
+
+    iter->second.addDirectoryFileEntry(fileName, serverNum, directoryOrFile);
+}
+
+bool Server::listDirectory(string directoryName)
+{
+    map<string, DirectoryFile>::iterator iter = directoryFile.find(directoryName);
+    if(iter == directoryFile.end())
+	return false;
+    else
+	iter->second.listDirectoryFileEntry();
+    return true;
+
+}
+
+//TODO
+uint16_t getMessage(const string inst, const String path, const uint16_t attach)
+{
+    if(!inst.compare("store"))
+	return 0;
+}
 
 #endif
