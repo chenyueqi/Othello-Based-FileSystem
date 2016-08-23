@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= -std=c++11 -m64 -flto -Wno-unused-result
+CFLAGS=  -Wno-unused-result
 
 CFILES = $(shell find ./ -name "*.cc")
 OBJS = $(CFILES:.cc=.o)

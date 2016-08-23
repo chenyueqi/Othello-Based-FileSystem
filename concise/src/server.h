@@ -2,168 +2,250 @@
 #define __SERVER_H__
 
 #include<iostream>
-#include<cstdint>
 #include<string>
 #include<ctime>
 #include<map>
 #include<vector>
 #include<sstream>
+#include<stack>
+#include"common.h"
 
 using namespace std;
 
-
-const uint64_t defaultCapacity = 100;
-
-class DirectoryFileEntry
+struct FileBlock
 {
-    private:
-	uint16_t serverNum;
-	bool directoryOrFile; // directory: true, file: false
-    public:
-	DirectoryFileEntry(uint16_t num=0, bool attribute=true):serverNum(num), directoryOrFile(attribute){}
-	uint16_t getServerNum(){return serverNum;}
-	bool getEntryAttribute(){return directoryOrFile;}
+    uint16_t serverNum;
+    uint16_t blockNum;
 };
 
-class DirectoryFile
+struct DirFileEntry
 {
-    private:
-	map<string, DirectoryFileEntry> dir;
-    public:
-	DirectoryFile(){}
-	bool queryDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile);
-	bool deleteDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile);
-	bool addDirectoryFileEntry(string fileName, uint16_t serverNum, bool directoryOrFile);
-	bool listDirectoryFileEntry();
-
+	bool dirOrFile; // directory: true, file: false
+	vector<FileBlock> info;
 };
 
-bool DirectoryFile::queryDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile)
+struct DirFile
 {
-    map<string, DirectoryFileEntry>::iterator iter = dir.find(fileName);
-    if(iter == dir.end())
-	return false;
-    else
-    {
-	serverNum = iter->second.getServerNum();
-	directoryOrFile = iter->second.getEntryAttribute();
-	return true;
-    }
-}
-
-bool DirectoryFile::deleteDirectoryFileEntry(string fileName, uint16_t& serverNum, bool& directoryOrFile)
-{
-    map<string, DirectoryFileEntry>::iterator iter = dir.find(fileName);
-    if(iter == dir.end())
-	return true;
-    else
-    {
-	serverNum = iter->second.getServerNum();
-	directoryOrFile = iter->second.getEntryAttribute();
-	dir.erase(iter);
-	return true;
-    }
-    return false;
-}
-
-bool DirectoryFile::addDirectoryFileEntry(string fileName, uint16_t serverNum, bool directoryOrFile)
-{
-    map<string, DirectoryFileEntry>::iterator iter = dir.find(fileName);
-    if(iter != dir.end())
-	return true;
-    else
-    {
-	DirectoryFileEntry entry(serverNum, directoryOrFile);
-	dir.insert(pair<string, DirectoryFileEntry>(fileName, entry));
-	return true;
-    }
-    return false;
-}
-
-bool DirectoryFile::listDirectoryFileEntry()
-{
-    fprintf(stderr, "BEGIN\n");
-    for(map<string, DirectoryFileEntry>::iterator iter = dir.begin(); iter != dir.end(); iter++)
-    {
-	fprintf(stderr, "%s\t", iter->first.c_str());
-	if(iter->second.getEntryAttribute() == true)
-	    fprintf(stderr, "directory\t");
-	else
-	    fprintf(stderr, "file\t");
-	fprintf(stderr, "%u\n", iter->second.getServerNum());
-    }
-    fprintf(stderr, "END\n");
-}
+	map<string, DirFileEntry> entryMap;
+};
 
 class Server
 {
     private:
-	uint16_t no;
+	uint16_t num;
 	uint64_t serverCapacity;
 	uint64_t availCapacity;
 	uint64_t usedCapacity;
 	vector<Server>* serverArr;
-	map<string, DirectoryFile> directoryFile;
+	map<string, DirFile> dirFileMap;
 
     private:
 	bool sendMessageToServer(uint16_t num, string intr);
-	uint16_t getServerNumOfFile(string fileName);
+
+	bool mkDir(const string dirName);
+	bool lsDir(const string dirName);
+	bool delDir(const string dirName);
+
+	bool storeDirFile(const string dirName);
+
+	bool writeFile(const string fileName);
+	bool readFile(const string fileName);
+	bool deleteFile(const string fileName);
+
+	bool alloDirFileServer(uint16_t &serverResult);
+	bool alloFileServer(uint16_t &serverResult);
+
+	bool usedStorage(uint64_t );
+	bool freeStorage(uint64_t );
+	
 	
     public:
-	Server(uint16_t num, uint64_t capacity=defaultCapacity, vector<Server>* serverArr=NULL): //constructor
-	    no(num), 
+	Server(uint16_t n, uint64_t capacity=defaultCapacity, vector<Server>* serverArr=NULL): //constructor
+	    num(n), 
 	    serverCapacity(capacity), 
 	    availCapacity(serverCapacity), 
 	    usedCapacity(0){}
 
-	uint16_t getNo(){return no;}
+	uint16_t getNum(){return num;}
 	uint64_t getServerCapacity(){return serverCapacity;}
 	uint64_t getAvailableCapacity(){return availCapacity;}
 	uint64_t getUsedCapacity(){return usedCapacity;}
 
-	bool addDirectoryFileEntry(string fileName, uint16_t &serverNum, bool &directoryOrFile);//XXX should be private , to test for public
+	void testDirFile(); // test Directory File content
 
-	bool listDirectory(string directoryName);
-
-	//XXX
-	uint16_t  getMessage(const string inst, const string path, const uint16_t attach); // message interface
+	//FIXME
+	bool  getMessage(const string inst, stack<string> pathStack, const uint16_t attach); // message interface
 };
 
-
-bool Server::addDirectoryFileEntry(string fileName, uint16_t &serverNum, bool &directoryOrFile)
+bool Server::alloDirFileServer(uint16_t &serverResult)
 {
-    int i = 0;
-    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
-
-    string directoryName = fileName.substr(0, i);
-
-    map<string, DirectoryFile>::iterator iter = directoryFile.find(directoryName);
-    if(iter == directoryFile.end())
-    {
-	DirectoryFile* newDirectoryFile = new DirectoryFile();
-	directoryFile.insert(pair<string, DirectoryFile>(directoryName, *newDirectoryFile));
-	iter = directoryFile.find(directoryName);
+    if(availCapacity > 0){
+	serverResult = num;
+	return true;
     }
-
-    iter->second.addDirectoryFileEntry(fileName, serverNum, directoryOrFile);
+    else{
+	//TODO choose a new server to store directory file inc method
+    }
 }
 
-bool Server::listDirectory(string directoryName)
+bool Server::alloFileServer(uint16_t &serverResult)
 {
-    map<string, DirectoryFile>::iterator iter = directoryFile.find(directoryName);
-    if(iter == directoryFile.end())
+    //TODO choose a new server to store directory file  random method
+    return true; 
+}
+
+void Server::testDirFile()
+{
+    for(map<string, DirFile>::iterator iter = dirFileMap.begin(); iter != dirFileMap.end(); iter++)
+    {
+	fprintf(stderr, "%s\n", iter->first.c_str());
+	for(map<string, DirFileEntry>::iterator iter2  = iter->second.entryMap.begin(); iter2 != iter->second.entryMap.end(); iter2++)
+	    fprintf(stderr, "  %s\n", iter2->first.c_str());
+    }
+}
+
+bool Server::storeDirFile(string dirName)
+{
+    map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
+    if(iter == dirFileMap.end())
+    {
+	DirFile newDirFile;
+	//TODO use storage
+	dirFileMap.insert(pair<string, DirFile>(dirName, newDirFile));
+	return true;
+    }
+    else
+    {
+	fprintf(stderr, "directory file exist ! %s %d\n", __FILE__, __LINE__);
+	return true;
+    }
+    return false;
+}
+
+bool Server::mkDir(string dirName)
+{
+    int i = 0;
+    for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
+    string faName = dirName.substr(0, i);
+
+    map<string, DirFile>::iterator iter = dirFileMap.find(faName);
+
+    if(iter == dirFileMap.end())
+    {
+	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
+	return false;
+    }
+
+    if(iter->second.entryMap.find(dirName) == iter->second.entryMap.end())
+    {
+	DirFileEntry entry;
+	entry.dirOrFile = true;
+
+	//TODO allocate server
+	FileBlock block;
+	block.serverNum = 0;
+	block.blockNum = 0;
+	entry.info.push_back(block);
+
+	//TODO use storage
+	iter->second.entryMap.insert(pair<string, DirFileEntry>(dirName, entry));
+
+	storeDirFile(dirName);
+
+	return true;
+    }
+    else
+    {
+	fprintf(stderr, "directory file entry exist %s %d\n", __FILE__, __LINE__);
+	return true;
+    }
+    return false;
+}
+
+
+bool Server::lsDir(string dirName)
+{
+    map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
+
+    if(iter == dirFileMap.end())
 	return false;
     else
-	iter->second.listDirectoryFileEntry();
+    {
+	map<string, DirFileEntry> entryMap = iter->second.entryMap;
+	fprintf(stderr, "BEGIN\n");
+	for(map<string, DirFileEntry>::iterator iter = entryMap.begin(); iter != entryMap.end(); iter++)
+	{
+	    fprintf(stderr, "%s\t", iter->first.c_str());
+	    if(iter->second.dirOrFile == true)
+		fprintf(stderr, "directory\t");
+	    else
+		fprintf(stderr, "file\t");
+	}
+	fprintf(stderr, "\nEND\n");
+    }
     return true;
+}
 
+bool Server::delDir(const string dirName)
+{
+    map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
+
+    if(iter == dirFileMap.end())
+	return true;
+    else
+    {
+	for(map<string, DirFileEntry>::iterator iter2 = iter->second.entryMap.begin(); iter2 != iter->second.entryMap.end(); iter2++)
+	{
+	    //do something TODO
+	}
+    }
 }
 
 //TODO
-uint16_t getMessage(const string inst, const String path, const uint16_t attach)
+bool Server::getMessage(const string inst, stack<string> pathStack, const uint16_t attach)
 {
-    if(!inst.compare("store"))
-	return 0;
+    if(!inst.compare("list directory")){
+	while(!pathStack.empty()){
+	    lsDir(pathStack.top());
+	    pathStack.pop();
+	}
+    }
+
+    else if(!inst.compare("store directory file")){
+	while(!pathStack.empty()){
+	    storeDirFile(pathStack.top());
+	    pathStack.pop();
+	}
+    }
+
+    else if(!inst.compare("make directory")){
+	while(!pathStack.empty()){
+	    mkDir(pathStack.top());
+	    pathStack.pop();
+	}
+    }
+
+    else if(!inst.compare("delete directory")){
+	while(!pathStack.empty()){
+	    delDir(pathStack.top());
+	    pathStack.pop();
+	}
+    }
+
+    else if(!inst.compare("writefile")){
+
+    }
+    else if(!inst.compare("readfile")){
+    }
+
+    else if(!inst.compare("use storage")){
+    }
+
+    else if(!inst.compare("free storage")){
+    }
+
+    else
+	fprintf(stderr, "INVALID MESSAGE !\n");
 }
 
 #endif

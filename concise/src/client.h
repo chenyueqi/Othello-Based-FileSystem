@@ -6,6 +6,7 @@
 #include<vector>
 #include<ctime>
 #include<cstdio>
+#include"common.h"
 
 using namespace std;
 
