@@ -2,14 +2,13 @@ CC=g++
 CFLAGS=  -Wno-unused-result
 
 CFILES = $(shell find ./ -name "*.cc")
+HFILES = $(shell find ./ -name "*.h")
 OBJS = $(CFILES:.cc=.o)
 
-LDFLAGS= -lpthread
-
-main: $(CFILES)
+main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
-test:
+test: main
 	./main
 
 clean: 

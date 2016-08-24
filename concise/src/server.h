@@ -71,6 +71,9 @@ class Server
 	uint64_t getAvailableCapacity(){return availCapacity;}
 	uint64_t getUsedCapacity(){return usedCapacity;}
 
+	bool setNum(uint16_t n){num = n;}
+	bool setServerCapacity(uint64_t capacity){availCapacity = capacity;}
+
 	void testDirFile(); // test Directory File content
 
 	//FIXME
@@ -83,8 +86,18 @@ bool Server::alloDirFileServer(uint16_t &serverResult)
 	serverResult = num;
 	return true;
     }
-    else{
-	//TODO choose a new server to store directory file inc method
+    else // current server do not have enough storage
+    {
+	uint16_t high = num >> dcBit;
+	uint16_t low = num - (high << dcBit);
+
+	uint16_t serverPerDc = serverArr->size() / (1<<dcBit);
+
+	//FIXME if all the servers in a datacenter do not have storage ?
+	while(!(serverArr->at(high<<dcBit + low).getAvailableCapacity() > 0))
+	    high = (high + 1)%serverPerDc;
+
+	serverResult = high << dcBit + low;
     }
 }
 
@@ -141,9 +154,9 @@ bool Server::mkDir(string dirName)
 	DirFileEntry entry;
 	entry.dirOrFile = true;
 
-	//TODO allocate server
 	FileBlock block;
-	block.serverNum = 0;
+	//TODO allocate server
+	alloDirFileServer(block.serverNum);
 	block.blockNum = 0;
 	entry.info.push_back(block);
 

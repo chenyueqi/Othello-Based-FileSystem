@@ -2,10 +2,14 @@
 #include"server.h"
 #include<stack>
 
+vector<Server> serverArr;
+Client c;
+
+bool init();
+
 int main()
 {
-    Client c;
-    Server s(0);
+    Server s(0xd);
 
     stack<string> st;
     st.push("/home/user/foo");
@@ -16,4 +20,15 @@ int main()
     s.getMessage("make directory", st ,0);
 
     s.testDirFile();
+}
+
+bool init()
+{
+    uint16_t serverPerDc = 128;
+    for(int i = 0 ; i < serverPerDc * 1<<dcBit ; i++)
+    {
+	Server s(i, 0, &serverArr);
+	serverArr.push_back(s);
+    }
+
 }
