@@ -40,23 +40,36 @@ class Server
 	map<string, DirFile> dirFileMap;
 
     private:
-	bool sendMessageToServer(uint16_t num, string intr);
 
-	bool mkDir(const string dirName);
-	bool lsDir(const string dirName);
+	//communication between server
+	bool sendMessageToServer(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+
+	//directory operation
+	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum);
+	bool lsDir(const string dirName); // does not contain cross server access
 	bool delDir(const string dirName);
 
 	bool storeDirFile(const string dirName);
 
+	//file operation;
 	bool writeFile(const string fileName);
 	bool readFile(const string fileName);
 	bool deleteFile(const string fileName);
 
+	//check server to find appropriate server for storage
 	bool alloDirFileServer(uint16_t &serverResult);
 	bool alloFileServer(uint16_t &serverResult);
 
-	bool usedStorage(uint64_t );
-	bool freeStorage(uint64_t );
+	//capacity management in Byte
+	bool useStorage(uint64_t capacity){
+	    availCapacity -= capacity;
+	    usedCapacity += capacity;
+	}
+
+	bool freeStorage(uint64_t capacity){
+	    availCapacity += capacity;
+	    usedCapacity -= capacity;
+	}
 	
 	
     public:
@@ -77,11 +90,16 @@ class Server
 	void testDirFile(); // test Directory File content
 
 	//FIXME
-	bool  getMessage(const string inst, stack<string> pathStack, const uint16_t attach); // message interface
+	bool  getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt); // message interface
 };
 
 bool Server::alloDirFileServer(uint16_t &serverResult)
 {
+    uint16_t high = num >> dcBit;
+    uint16_t low = num - (high << dcBit);
+
+    fprintf(stderr, "high: %u, low: %u %s %d\n", high, low, __FILE__, __LINE__);
+
     if(availCapacity > 0){
 	serverResult = num;
 	return true;
@@ -135,7 +153,8 @@ bool Server::storeDirFile(string dirName)
     return false;
 }
 
-bool Server::mkDir(string dirName)
+//if dirExist = true, do not allocate server for new directory to store relative store file
+bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum)
 {
     int i = 0;
     for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
@@ -155,7 +174,10 @@ bool Server::mkDir(string dirName)
 	entry.dirOrFile = true;
 
 	FileBlock block;
-	//TODO allocate server
+
+	//FIXME allocate server
+	//if dirExist = true, how to handle
+	
 	alloDirFileServer(block.serverNum);
 	block.blockNum = 0;
 	entry.info.push_back(block);
@@ -215,8 +237,10 @@ bool Server::delDir(const string dirName)
 }
 
 //TODO
-bool Server::getMessage(const string inst, stack<string> pathStack, const uint16_t attach)
+bool Server::getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
+    serverAcceCnt++;
+
     if(!inst.compare("list directory")){
 	while(!pathStack.empty()){
 	    lsDir(pathStack.top());
@@ -233,7 +257,7 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const uint16
 
     else if(!inst.compare("make directory")){
 	while(!pathStack.empty()){
-	    mkDir(pathStack.top());
+	    mkDir(pathStack.top() , dirExist, preServerNum);
 	    pathStack.pop();
 	}
     }

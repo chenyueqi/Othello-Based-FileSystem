@@ -13,11 +13,15 @@ int main()
 
     stack<string> st;
     st.push("/home/user/foo");
-    s.getMessage("store directory file", st ,0);
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+    s.getMessage("store directory file", st, false, 0 ,serverAcceCnt, dcAcceCnt);
 
     st.pop();
     st.push("/home/user/foo/bar");
-    s.getMessage("make directory", st ,0);
+    serverAcceCnt = 0;
+    dcAcceCnt = 0;
+    s.getMessage("make directory", st ,false, 0, serverAcceCnt, dcAcceCnt);
 
     s.testDirFile();
 }
