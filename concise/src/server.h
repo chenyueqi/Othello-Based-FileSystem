@@ -3,7 +3,7 @@
 
 #include<iostream>
 #include<string>
-#include<ctime>
+#include<cstdlib>
 #include<map>
 #include<vector>
 #include<sstream>
@@ -12,25 +12,22 @@
 
 using namespace std;
 
-struct FileBlock
-{
+struct FileBlock{
     uint16_t serverNum;
     uint16_t blockNum;
 };
 
-struct DirFileEntry
-{
+struct DirFileEntry{
 	bool dirOrFile; // directory: true, file: false
 	vector<FileBlock> info;
 };
 
-struct DirFile
-{
+struct DirFile{
 	map<string, DirFileEntry> entryMap;
+	vector<FileBlock> info;
 };
 
-class Server
-{
+class Server{
     private:
 	uint16_t num;
 	uint64_t serverCapacity;
@@ -45,7 +42,7 @@ class Server
 	bool sendMessageToServer(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 
 	//directory operation
-	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum);
+	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult);
 	bool lsDir(const string dirName); // does not contain cross server access
 	bool delDir(const string dirName);
 
@@ -90,7 +87,7 @@ class Server
 	void testDirFile(); // test Directory File content
 
 	//FIXME
-	bool  getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt); // message interface
+	bool  getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t size); // message interface
 };
 
 bool Server::alloDirFileServer(uint16_t &serverResult)
@@ -121,7 +118,20 @@ bool Server::alloDirFileServer(uint16_t &serverResult)
 
 bool Server::alloFileServer(uint16_t &serverResult)
 {
-    //TODO choose a new server to store directory file  random method
+    uint16_t high = num >> dcBit;
+    uint16_t low = num - (high << dcBit);
+
+    uint16_t serverPerDc = serverArr->size() / (1<<dcBit);
+
+    uint16_t candidate = rand()%serverPerDc;
+
+    //FIXME if all the servers in a datacenter do not have storage ?
+    while(!(serverArr->at(candidate).getAvailableCapacity() > 0))
+	candidate = rand()%serverPerDc;
+
+    serverResult = candidate;
+
+
     return true; 
 }
 
@@ -138,23 +148,27 @@ void Server::testDirFile()
 bool Server::storeDirFile(string dirName)
 {
     map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
-    if(iter == dirFileMap.end())
-    {
+
+    // if this directory file does not exist
+    if(iter == dirFileMap.end()){
 	DirFile newDirFile;
-	//TODO use storage
 	dirFileMap.insert(pair<string, DirFile>(dirName, newDirFile));
+
+	useStorage(fileBlockSize);
 	return true;
     }
-    else
-    {
+
+    // if this directory file has exist in this server
+    else{
 	fprintf(stderr, "directory file exist ! %s %d\n", __FILE__, __LINE__);
 	return true;
     }
     return false;
 }
 
-//if dirExist = true, do not allocate server for new directory to store relative store file
-bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum)
+//if dirExist = true, do not allocate server for new directory to store relative directory file
+//else if dirExist = false, allocate server for new directory to store and also assign serverResult
+bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum , uint16_t &serverResult)
 {
     int i = 0;
     for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
@@ -231,13 +245,23 @@ bool Server::delDir(const string dirName)
     {
 	for(map<string, DirFileEntry>::iterator iter2 = iter->second.entryMap.begin(); iter2 != iter->second.entryMap.end(); iter2++)
 	{
-	    //do something TODO
+	    // if this entry is directory, do recursion
+	    if(iter2->second.dirOrFile == true)
+	    {
+		//TODO
+
+	    }
+	    else
+	    {
+		//TODO
+	    }
 	}
     }
+    return false;
 }
 
 //TODO
-bool Server::getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
+bool Server::getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t size)
 {
     serverAcceCnt++;
 
@@ -257,7 +281,7 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const bool d
 
     else if(!inst.compare("make directory")){
 	while(!pathStack.empty()){
-	    mkDir(pathStack.top() , dirExist, preServerNum);
+	    mkDir(pathStack.top() , dirExist, preServerNum, serverResult);
 	    pathStack.pop();
 	}
     }
@@ -276,9 +300,11 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const bool d
     }
 
     else if(!inst.compare("use storage")){
+	useStorage(size);
     }
 
     else if(!inst.compare("free storage")){
+	freeStorage(size);
     }
 
     else
