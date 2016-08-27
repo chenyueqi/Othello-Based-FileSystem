@@ -14,17 +14,23 @@ using namespace std;
 
 struct FileBlock{
     uint16_t serverNum;
-    uint16_t blockNum;
+    uint16_t blockCnt;
 };
 
 struct DirFileEntry{
 	bool dirOrFile; // directory: true, file: false
-	vector<FileBlock> info;
+	uint16_t serverNum;// used if dirOrFile = true
+	vector<FileBlock> info; // used if dirOrFile = fasle
+};
+
+struct DirBlock{
+    map<string, DirFileEntry> entryMap;
+    uint16_t serverNum;
+    uint16_t blockCnt;
 };
 
 struct DirFile{
-	map<string, DirFileEntry> entryMap;
-	vector<FileBlock> info;
+    vector<DirBlock> info;
 };
 
 class Server{
@@ -39,12 +45,12 @@ class Server{
     private:
 
 	//communication between server
-	bool sendMessageToServer(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool sendMessageToServer(const uint16_t serverNum, const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 
 	//directory operation
-	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult);
-	bool lsDir(const string dirName); // does not contain cross server access
-	bool delDir(const string dirName);
+	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool lsDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt); // does not contain cross server access
+	bool delDir(const string dirName, uint16_t &serverAcceCn, uint8_t &dcAcceCnt);
 
 	bool storeDirFile(const string dirName);
 
@@ -54,8 +60,8 @@ class Server{
 	bool deleteFile(const string fileName);
 
 	//check server to find appropriate server for storage
-	bool alloDirFileServer(uint16_t &serverResult);
-	bool alloFileServer(uint16_t &serverResult);
+	bool allocDirFileServer(const uint16_t reference, uint16_t &serverResult);
+	bool allocFileServer(uint16_t &serverResult);
 
 	//capacity management in Byte
 	bool useStorage(uint64_t capacity){
@@ -66,6 +72,10 @@ class Server{
 	bool freeStorage(uint64_t capacity){
 	    availCapacity += capacity;
 	    usedCapacity -= capacity;
+	}
+
+	bool isSameDc(uint16_t s1, uint16_t s2){
+	    return (s1 - ((s1 >> dcBit) << dcBit)) == (s2 - ((s2 >> dcBit) << dcBit));
 	}
 	
 	
@@ -90,33 +100,35 @@ class Server{
 	bool  getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t size); // message interface
 };
 
-bool Server::alloDirFileServer(uint16_t &serverResult)
+bool Server::allocDirFileServer(const uint16_t reference, uint16_t &serverResult)
 {
-    uint16_t high = num >> dcBit;
-    uint16_t low = num - (high << dcBit);
+    uint16_t high = reference >> dcBit;
+    uint16_t low = reference - (high << dcBit);
 
     fprintf(stderr, "high: %u, low: %u %s %d\n", high, low, __FILE__, __LINE__);
 
-    if(availCapacity > 0){
-	serverResult = num;
+    //if reference server has enough capacity
+    if(serverArr->at(reference).getAvailableCapacity() > fileBlockSize){
+	serverResult = reference;
 	return true;
     }
-    else // current server do not have enough storage
-    {
-	uint16_t high = num >> dcBit;
-	uint16_t low = num - (high << dcBit);
+    else{
+
+	uint16_t high = reference >> dcBit;
+	uint16_t low = reference - (high << dcBit);
 
 	uint16_t serverPerDc = serverArr->size() / (1<<dcBit);
 
 	//FIXME if all the servers in a datacenter do not have storage ?
-	while(!(serverArr->at(high<<dcBit + low).getAvailableCapacity() > 0))
+	while(!(serverArr->at(high<<dcBit + low).getAvailableCapacity() > fileBlockSize))
 	    high = (high + 1)%serverPerDc;
 
 	serverResult = high << dcBit + low;
     }
 }
 
-bool Server::alloFileServer(uint16_t &serverResult)
+//TODO alloc according to reference
+bool Server::allocFileServer(uint16_t &serverResult)
 {
     uint16_t high = num >> dcBit;
     uint16_t low = num - (high << dcBit);
@@ -131,7 +143,6 @@ bool Server::alloFileServer(uint16_t &serverResult)
 
     serverResult = candidate;
 
-
     return true; 
 }
 
@@ -140,10 +151,14 @@ void Server::testDirFile()
     for(map<string, DirFile>::iterator iter = dirFileMap.begin(); iter != dirFileMap.end(); iter++)
     {
 	fprintf(stderr, "%s\n", iter->first.c_str());
-	for(map<string, DirFileEntry>::iterator iter2  = iter->second.entryMap.begin(); iter2 != iter->second.entryMap.end(); iter2++)
-	    fprintf(stderr, "  %s\n", iter2->first.c_str());
+
+	for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++)
+	    for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.begin(); iter3 !=iter2->entryMap.end(); iter3++)
+		fprintf(stderr, "  %s\n", iter3->first.c_str());
     }
+	
 }
+
 
 bool Server::storeDirFile(string dirName)
 {
@@ -151,14 +166,19 @@ bool Server::storeDirFile(string dirName)
 
     // if this directory file does not exist
     if(iter == dirFileMap.end()){
+
+	DirBlock newDirBlock;
+	newDirBlock.serverNum = num;
+	newDirBlock.blockCnt = 1;
+
+	useStorage(newDirBlock.blockCnt * fileBlockSize);
+
 	DirFile newDirFile;
+	newDirFile.info.push_back(newDirBlock);
 	dirFileMap.insert(pair<string, DirFile>(dirName, newDirFile));
 
-	useStorage(fileBlockSize);
 	return true;
     }
-
-    // if this directory file has exist in this server
     else{
 	fprintf(stderr, "directory file exist ! %s %d\n", __FILE__, __LINE__);
 	return true;
@@ -168,7 +188,7 @@ bool Server::storeDirFile(string dirName)
 
 //if dirExist = true, do not allocate server for new directory to store relative directory file
 //else if dirExist = false, allocate server for new directory to store and also assign serverResult
-bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum , uint16_t &serverResult)
+bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum , uint16_t &serverResult, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
     for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
@@ -176,31 +196,59 @@ bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServer
 
     map<string, DirFile>::iterator iter = dirFileMap.find(faName);
 
-    if(iter == dirFileMap.end())
-    {
+    // if father directory does not exist, this is fasle
+    if(iter == dirFileMap.end()){
 	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
 	return false;
     }
 
-    if(iter->second.entryMap.find(dirName) == iter->second.entryMap.end())
-    {
+    bool flag = false;
+    for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
+	if(!isSameDc(iter2->serverNum, num))
+	    dcAcceCnt++;
+	else if(iter2->serverNum != num)
+	    serverAcceCnt++;
+
+	if(iter2->entryMap.find(dirName) == iter2->entryMap.end())
+	    continue;
+	else{
+	    flag = true;
+	    break;
+	}
+    }
+
+    // if direcotory entry does not exist, do adding
+    if(!flag){
+	vector<DirBlock>::iterator iter3 = iter->second.info.end() - 1;
+
+	// final directory file block has been filled
+	if(iter3->entryMap.size() == iter3->blockCnt * fileBlockSize / dirFileEntrySize)
+	{
+	    uint16_t num;
+	    allocDirFileServer(iter3->serverNum, num);
+	    if(num == iter3->serverNum)
+		iter3->blockCnt++;
+	    else
+	    {
+		DirBlock newDirBlock;
+		newDirBlock.serverNum = num;
+		newDirBlock.blockCnt = 1;
+		iter->second.info.push_back(newDirBlock);
+		iter3 = iter->second.info.end() - 1;
+	    }
+	}
+
 	DirFileEntry entry;
 	entry.dirOrFile = true;
+	    
+	if(dirExist)
+	    entry.serverNum = preServerNum;
+	else{
+	    allocDirFileServer(iter3->serverNum, entry.serverNum);
+	    //TODO send message to server
+	}
 
-	FileBlock block;
-
-	//FIXME allocate server
-	//if dirExist = true, how to handle
-	
-	alloDirFileServer(block.serverNum);
-	block.blockNum = 0;
-	entry.info.push_back(block);
-
-	//TODO use storage
-	iter->second.entryMap.insert(pair<string, DirFileEntry>(dirName, entry));
-
-	storeDirFile(dirName);
-
+	iter3->entryMap.insert(pair<string, DirFileEntry>(dirName, entry));
 	return true;
     }
     else
@@ -211,8 +259,7 @@ bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServer
     return false;
 }
 
-
-bool Server::lsDir(string dirName)
+bool Server::lsDir(string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
 
@@ -220,22 +267,29 @@ bool Server::lsDir(string dirName)
 	return false;
     else
     {
-	map<string, DirFileEntry> entryMap = iter->second.entryMap;
 	fprintf(stderr, "BEGIN\n");
-	for(map<string, DirFileEntry>::iterator iter = entryMap.begin(); iter != entryMap.end(); iter++)
+	for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++)
 	{
-	    fprintf(stderr, "%s\t", iter->first.c_str());
-	    if(iter->second.dirOrFile == true)
-		fprintf(stderr, "directory\t");
-	    else
-		fprintf(stderr, "file\t");
+	    if(!isSameDc(iter2->serverNum, num))
+		dcAcceCnt++;
+	    else if(iter2->serverNum != num)
+		serverAcceCnt++;
+
+	    for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.begin(); iter3 != iter2->entryMap.end(); iter3++)
+	    {
+		fprintf(stderr, "%s\t", iter3->first.c_str());
+		if(iter3->second.dirOrFile == true)
+		    fprintf(stderr, "directory\t");
+		else
+		    fprintf(stderr, "file\t");
+	    }
 	}
 	fprintf(stderr, "\nEND\n");
     }
     return true;
 }
 
-bool Server::delDir(const string dirName)
+bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
 
@@ -243,19 +297,6 @@ bool Server::delDir(const string dirName)
 	return true;
     else
     {
-	for(map<string, DirFileEntry>::iterator iter2 = iter->second.entryMap.begin(); iter2 != iter->second.entryMap.end(); iter2++)
-	{
-	    // if this entry is directory, do recursion
-	    if(iter2->second.dirOrFile == true)
-	    {
-		//TODO
-
-	    }
-	    else
-	    {
-		//TODO
-	    }
-	}
     }
     return false;
 }
@@ -265,13 +306,15 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const bool d
 {
     serverAcceCnt++;
 
+    //from gateway
     if(!inst.compare("list directory")){
 	while(!pathStack.empty()){
-	    lsDir(pathStack.top());
+	    lsDir(pathStack.top(), serverAcceCnt, dcAcceCnt);
 	    pathStack.pop();
 	}
     }
 
+    //from another server
     else if(!inst.compare("store directory file")){
 	while(!pathStack.empty()){
 	    storeDirFile(pathStack.top());
@@ -279,30 +322,37 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const bool d
 	}
     }
 
+    //from centralized concise
     else if(!inst.compare("make directory")){
 	while(!pathStack.empty()){
-	    mkDir(pathStack.top() , dirExist, preServerNum, serverResult);
+	    mkDir(pathStack.top() , dirExist, preServerNum, serverResult, serverAcceCnt, dcAcceCnt);
 	    pathStack.pop();
 	}
     }
 
+    //from gateway
     else if(!inst.compare("delete directory")){
 	while(!pathStack.empty()){
-	    delDir(pathStack.top());
+	    delDir(pathStack.top(), serverAcceCnt, dcAcceCnt);
 	    pathStack.pop();
 	}
     }
 
+    //from gateway
     else if(!inst.compare("writefile")){
 
     }
+
+    //from gateway 
     else if(!inst.compare("readfile")){
     }
 
+    //from another server
     else if(!inst.compare("use storage")){
 	useStorage(size);
     }
 
+    //from another server
     else if(!inst.compare("free storage")){
 	freeStorage(size);
     }
