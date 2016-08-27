@@ -9,26 +9,28 @@ bool init();
 
 int main()
 {
-    Server s(0xd);
+    init();
 
-    fprintf(stderr, "%u\n", s.getAvailableCapacity());
+    fprintf(stderr, "%u\n", serverArr[0].getAvailableCapacity());
+
     stack<string> st;
     st.push("/home/user/foo");
     uint16_t serverAcceCnt = 0;
     uint8_t dcAcceCnt = 0;
     uint16_t serverResult = 0;
-    s.getMessage("store directory file", st, false, 0 ,serverResult, serverAcceCnt, dcAcceCnt, 0);
+    serverArr[0].getMessage("store directory file", st, false, 0 ,serverResult, serverAcceCnt, dcAcceCnt, 0);
+    fprintf(stderr, "available Capacity:%u server access count:%u dc access count:%u\n", serverArr[0].getAvailableCapacity(), serverAcceCnt, dcAcceCnt);
 
-    fprintf(stderr, "%u\n", s.getAvailableCapacity());
+    serverArr[0].testDirFile();
+
     st.pop();
     st.push("/home/user/foo/bar");
     serverAcceCnt = 0;
     dcAcceCnt = 0;
-    s.getMessage("make directory", st ,false, 0, serverResult, serverAcceCnt, dcAcceCnt, 0);
+    serverArr[0].getMessage("make directory", st ,false, 0, serverResult, serverAcceCnt, dcAcceCnt, 0);
+    fprintf(stderr, "available Capacity:%u server access count:%u dc access count:%u\n", serverArr[0].getAvailableCapacity(), serverAcceCnt, dcAcceCnt);
 
-    s.testDirFile();
-
-    fprintf(stderr, "%u\n", s.getAvailableCapacity());
+    serverArr[0].testDirFile();
 }
 
 bool init()
