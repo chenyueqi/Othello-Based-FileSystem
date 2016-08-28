@@ -62,7 +62,7 @@ class Server{
 
 	//check server to find appropriate server for storage
 	bool allocDirFileServer(const uint16_t reference, uint16_t &serverResult);
-	bool allocFileServer(uint16_t &serverResult);
+	bool allocFileServer(const uint16_t reference, uint16_t &serverResult);
 
 	//capacity management in Byte
 	bool useStorage(uint64_t capacity){
@@ -129,10 +129,10 @@ bool Server::allocDirFileServer(const uint16_t reference, uint16_t &serverResult
     }
 }
 
-bool Server::allocFileServer(uint16_t &serverResult)
+bool Server::allocFileServer(const uint16_t reference, uint16_t &serverResult)
 {
-    uint16_t high = num >> dcBit;
-    uint16_t low = num - (high << dcBit);
+    uint16_t high = reference >> dcBit;
+    uint16_t low = reference - (high << dcBit);
 
     uint16_t serverPerDc = serverArr->size() / (1<<dcBit);
 
@@ -271,8 +271,28 @@ bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAc
 
     if(iter == dirFileMap.end())
 	return true;
-    else
-    {
+    else{
+	for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
+	    if(!isSameDc(iter2->serverNum, num))
+		dcAcceCnt++;
+	    else if(iter2->serverNum != num)
+		serverAcceCnt++;
+
+	    for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.begin(); iter3 != iter2->entryMap.begin(); iter3++){
+		if(iter3->second.dirOrFile == true){
+		    if(!isSameDc(iter2->serverNum, iter3->second.serverNum))
+			dcAcceCnt++;
+		    else if(iter2->serverNum != iter3->second.serverNum)
+			serverAcceCnt++;
+
+		    serverArr->at(iter3->second.serverNum).delDir(iter3->first, serverAcceCnt, dcAcceCnt);
+		    
+		}
+		else{
+		    //TODO
+		}
+	    }
+	}
     }
     return false;
 }
@@ -324,9 +344,10 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
     map<string,DirFileEntry>::iterator iter3;
     for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
 	if(!isSameDc(iter2->serverNum, num))
-		dcAcceCnt++;
-	    else if(iter2->serverNum != num)
-		serverAcceCnt++;
+	    dcAcceCnt++;
+	else if(iter2->serverNum != num)
+	    serverAcceCnt++;
+
 	iter3 = iter2->entryMap.find(fileName);
 	if(iter3 == iter2->entryMap.end())
 	    continue;
@@ -343,33 +364,62 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 	    return false;
 	}
 
-	//TODO calculate  serverAcceCnt, dcAccceCnt
+	for(vector<FileBlock>::iterator iter4 = iter3->second.info.begin(); iter4 != iter3->second.info.end(); iter4++)
+	    if(!isSameDc(iter4->serverNum, num))
+		dcAcceCnt++;
+	    else if(iter4->serverNum != num)
+		serverAcceCnt++;
+
 	vector<FileBlock>::iterator iter4 = iter3->second.info.end() - 1;
-	if(iter4->restCapacity > size){
-	    iter4->restCapacity -= size;
-	    return true;
-	}
-	else{
-	    while(size > 0){
+
+	while(size > 0){
+	    if(iter4->restCapacity > size){
+		iter4->restCapacity -= size;
+		return true;
+	    }
+	    else{
 		size -= iter4->restCapacity;
 		iter4->restCapacity = 0;
-		//TODO allocat a new server
+		FileBlock fileBlock;
+		allocFileServer(iter4->serverNum, fileBlock.serverNum);
+		fileBlock.blockCnt = 1;
+		fileBlock.restCapacity = fileBlockSize * fileBlock.blockCnt;
+		iter3->second.info.push_back(fileBlock);
+		iter4 = iter3->second.info.end() - 1;
 	    }
 	}
-
+	return true;
     }
-    else
-    {
-	
-
+    else{
+	//TODO add file
+	iter3->second.dirOrFile = false;
+	FileBlock fileBlock;
+	allocFileServer(iter3->second.serverNum, fileBlock.serverNum);
+	fileBlock.blockCnt = 1;
+	fileBlock.restCapacity = fileBlockSize * fileBlock.blockCnt;
+	iter3->second.info.push_back(fileBlock);
+	vector<FileBlock>::iterator iter4 = iter3->second.info.end() - 1;
+	while(size > 0){
+	    if(iter4->restCapacity > size){
+		iter4->restCapacity -= size;
+		return true;
+	    }
+	    else{
+		size -= iter4->restCapacity;
+		iter4->restCapacity = 0;
+		FileBlock fileBlock;
+		allocFileServer(iter4->serverNum, fileBlock.serverNum);
+		fileBlock.blockCnt = 1;
+		fileBlock.restCapacity = fileBlockSize * fileBlock.blockCnt;
+		iter3->second.info.push_back(fileBlock);
+		iter4 = iter3->second.info.end() - 1;
+	    }
+	}
+	return true;
     }
-    
-
-    return true;
-
+    return false;
 }
 
-//TODO
 bool Server::getMessage(const string inst, stack<string> pathStack, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t size)
 {
     serverAcceCnt++;
