@@ -14,11 +14,11 @@ class Client
 {
     private:
 	bool sendMessageToGateway(string intr, bool recursion, string path1, string path2);
-//	gateway* gateWay;
+	Gateway* gateWay;
     public:
-//	Client(gateway* p)}
-	Client(){}
+	Client(Gateway* p = NULL):gateWay(p){}
 	bool sendMessage(string message);
+	bool setGateWay(Gateway* p){gateWay = p;}
 
 };
 

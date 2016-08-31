@@ -1,6 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+using namespace std;
 
 typedef unsigned char uint8_t;
 typedef unsigned short int uint16_t;
@@ -13,5 +14,9 @@ const uint64_t dirFileEntrySize = 100; 		//100 B
 
 const uint8_t dcBit = 0x2; // 1<<dcBit-1 < datacenter number <= 1<<dcBit
 
+class Gateway;
+class Central;
+class Server;
+class Client;
 
 #endif

@@ -36,17 +36,17 @@ struct DirFile{
 class Server{
     private:
 	uint16_t num;
-	uint64_t serverCapacity;
+	uint64_t serverCapacity; // in Byte
 	uint64_t availCapacity;
 	uint64_t usedCapacity;
-	vector<Server>* serverArr;
-	map<string, DirFile> dirFileMap;
+	vector<Server>* serverArr; //other servers
+	map<string, DirFile> dirFileMap; //dirtory server store in this server
 
     private:
 
 	//directory operation
 	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, uint16_t &serverResult, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
-	bool lsDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt); // does not contain cross server access
+	bool lsDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool mvDir(const string dirName, uint16_t &serverResult, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool rnDir(const string origName, const string newName, map<string, uint16_t> &result,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
@@ -165,7 +165,6 @@ void Server::testDirFile()
 		}
 	    }
     }
-	
 }
 
 
@@ -180,7 +179,7 @@ bool Server::storeDirFile(string dirName)
 	newDirBlock.serverNum = num;
 	newDirBlock.blockCnt = 1;
 
-	useStorage(newDirBlock.blockCnt * fileBlockSize);
+	useStorage(fileBlockSize);
 
 	DirFile newDirFile;
 	newDirFile.info.push_back(newDirBlock);
@@ -197,7 +196,6 @@ bool Server::storeDirFile(string dirName)
 
 //if dirExist = true, do not allocate server for new directory to store relative directory file
 //else if dirExist = false, allocate server for new directory to store and also assign serverResult
-//TODO
 bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum , uint16_t &serverResult, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
@@ -207,6 +205,7 @@ bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServer
     map<string, DirFile>::iterator iter = dirFileMap.find(faName);
 
     // if father directory does not exist, this is fasle
+    // father directory should always exist
     if(iter == dirFileMap.end()){
 	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
 	return false;
@@ -688,6 +687,7 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const string
 	}
     }
 
+    //from centralized concise
     else if(!inst.compare("move directory")){
 	while(!pathStack.empty()){
 	    mvDir(pathStack.top() , serverResult, serverAcceCnt, dcAcceCnt);
@@ -695,6 +695,7 @@ bool Server::getMessage(const string inst, stack<string> pathStack, const string
 	}
     }
 
+    //from centralized concise
     else if(!inst.compare("rename directory")){
 	while(!pathStack.empty()){
 	    rnDir(origName, newName, resultMap, serverAcceCnt, dcAcceCnt);
