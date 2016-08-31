@@ -3,64 +3,44 @@
 
 #include<iostream>
 #include<sstream>
-#include<vector>
-#include<ctime>
 #include<cstdio>
-#include"common.h"
-
+#include"gateway.h"
 using namespace std;
 
 class Client
 {
     private:
-	bool sendMessageToGateway(string intr, bool recursion, string path1, string path2);
 	Gateway* gateWay;
+	bool sendMessage(string message);
     public:
 	Client(Gateway* p = NULL):gateWay(p){}
-	bool sendMessage(string message);
 	bool setGateWay(Gateway* p){gateWay = p;}
 
 };
 
-bool sendMessageToGateway(string intr, bool recursion, string path1, string path2)
-{
-    return true;
-}
-
 bool Client::sendMessage(string message)
 {
     stringstream me(message);
-    string subMe;
-    getline(me, subMe, ' ');
+    string op;
+    getline(me, op, ' ');
 
-    if(!subMe.compare("mkdir"))
-    {
-	fprintf(stdout, "%s\n",  subMe.c_str());
+    if(!op.compare("mkdir") || !op.compare("ls") || !op.compare("rm") || !op.compare("rmr") || !op.compare("write")  || !op.compare("read")){
+	string path;
+	getline(me, path, ' ');
+	return gateWay->getMessage(op, path, "");
     }
-    else if(!subMe.compare("list"))
-    {
-	fprintf(stdout, "%s\n",  subMe.c_str());
 
+    else if(!op.compare("mv") || !op.compare("mvr") || !op.compare("cp")){
+	string path1, path2;
+	getline(me, path1, ' ');
+	getline(me, path2, ' ');
+	return gateWay->getMessage(op, path1, path2);
     }
-    else if(!subMe.compare("rm"))
-    {
-	fprintf(stdout, "%s\n",  subMe.c_str());
 
+    else{
+	fprintf(stderr, "INVALID operation %s %d\n", __FILE__, __LINE__);
+	return false;
     }
-    else if(!subMe.compare("mv"))
-    {
-	fprintf(stdout, "%s\n",  subMe.c_str());
-
-    }
-    else if(!subMe.compare("copy"))
-    {
-	fprintf(stdout, "%s\n",  subMe.c_str());
-
-    }
-    return false;
-
 };
-
-
 
 #endif

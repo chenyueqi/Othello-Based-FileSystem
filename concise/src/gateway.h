@@ -4,7 +4,7 @@
 #include<iostream>
 #include<sstream>
 #include<vector>
-#include"common.h"
+#include"central.h"
 using namespace std;
 
 class Gateway
@@ -26,24 +26,19 @@ class Gateway
 	bool sendMessageToServer(const string inst, const string path1, const string path2);
 };
 
-bool Gateway::getMessage(const string inst, const string path1, const string path2)
+bool Gateway::getMessage(const string op, const string path1, const string path2)
 {
-    //TODO
-    if(!inst.compare("list") || !inst.compare("write") || !inst.compare("read"))
-	sendMessageToServer(inst, path1, path2);
+    if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp"))
+	return sendMessageToServer(op, path1, path2);
+    else if(!op.compare("mkdir") || !op.compare("mvr"))
+	return central->getMessage(op, path1, path2);
     else
-	sendMessageToCentral(inst, path1, path2);
+	return false;
 }
 
 bool Gateway::sendMessageToServer(const string inst, const string path1, const string path2)
 {
 
 }
-
-bool Gateway::sendMessageToCentral(const string inst, const string path1, const string path2)
-{
-
-}
-
 
 #endif
