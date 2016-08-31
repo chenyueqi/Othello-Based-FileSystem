@@ -197,6 +197,7 @@ bool Server::storeDirFile(string dirName)
 
 //if dirExist = true, do not allocate server for new directory to store relative directory file
 //else if dirExist = false, allocate server for new directory to store and also assign serverResult
+//TODO
 bool Server::mkDir(string dirName, const bool dirExist, const uint16_t preServerNum , uint16_t &serverResult, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
@@ -319,7 +320,8 @@ bool Server::mvDir(const string dirName, uint16_t &serverResult, uint16_t &serve
 
     bool flag = false;
     map<string,DirFileEntry>::iterator iter3;
-    for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
+    vector<DirBlock>::iterator iter2;
+    for(iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
 	if(!isSameDc(iter2->serverNum, num))
 	    dcAcceCnt++;
 	else if(iter2->serverNum != num)
@@ -339,16 +341,69 @@ bool Server::mvDir(const string dirName, uint16_t &serverResult, uint16_t &serve
 	    fprintf(stderr, "this is a file %s %d\n", __FILE__, __LINE__);
 	    return false;
 	}
+	serverResult = iter3->second.serverNum;
+	iter2->entryMap.erase(iter3);
     }
-
-
-    //TODO
+    else{
+	fprintf(stderr, "directory doesn't exist %s %d\n", __FILE__, __LINE__);
+	return false;
+    }
 }
 
-bool Server::rnDir(const string origName, const string newName, map<string, uint16_t> &result,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
+bool Server::rnDir(const string origPre, const string newPre, map<string, uint16_t> &result,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
-    //TODO
+    map<string, DirFile>::iterator iter = dirFileMap.find(origPre);
 
+    if(iter == dirFileMap.end()){
+	fprintf(stderr, "BUG %s %d\n", __FILE__, __LINE__);
+	return false;
+    }
+
+    for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
+	if(!isSameDc(iter2->serverNum, num))
+	    dcAcceCnt++;
+	else if(iter2->serverNum != num)
+	    serverAcceCnt++;
+
+	for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.end(); iter3 != iter2->entryMap.begin(); iter3++){
+
+	    //if this entry has been modified
+	    if(!iter3->first.substr(0, origPre.length()).compare(origPre))
+		continue;
+
+	    if(iter3->second.dirOrFile == true){
+		string suffix = iter3->first.substr(origPre.length(), iter3->first.length());
+		string newName = newPre + origPre;
+
+		if(!isSameDc(iter2->serverNum, iter3->second.serverNum))
+		    dcAcceCnt++;
+		else if(iter2->serverNum != iter3->second.serverNum)
+		    serverAcceCnt++;
+		result.insert(pair<string, uint16_t>(newName, iter3->second.serverNum));
+		serverArr->at(iter3->second.serverNum).rnDir(iter3->first, newName, result, serverAcceCnt, dcAcceCnt);
+
+		DirFileEntry newEntry;
+		newEntry.dirOrFile = iter3->second.dirOrFile;
+		newEntry.serverNum = iter3->second.serverNum;
+
+		iter2->entryMap.erase(iter3);
+		iter2->entryMap.insert(pair<string, DirFileEntry>(newName, newEntry));
+		return true;
+	    }
+	    else{
+		string suffix = iter3->first.substr(origPre.length(), iter3->first.length());
+		string newName = newPre + origPre;
+
+		DirFileEntry newEntry;
+		newEntry.dirOrFile = iter3->second.dirOrFile;
+		newEntry.info = iter3->second.info;
+
+		iter2->entryMap.erase(iter3);
+		iter2->entryMap.insert(pair<string, DirFileEntry>(newName, newEntry));
+		return true;
+	    }
+	}
+    }
 }
 
 bool Server::touchFile(const string fileName, const bool fileExist, vector<FileBlock> info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
