@@ -14,9 +14,12 @@ const uint64_t dirFileEntrySize = 100; 		//100 B
 
 const uint8_t dcBit = 0x2; // 1<<dcBit-1 < datacenter number <= 1<<dcBit
 
+
+
 class Gateway;
 class Central;
 class Server;
 class Client;
+
 
 #endif

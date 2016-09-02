@@ -28,7 +28,7 @@ class Gateway
 
 bool Gateway::getMessage(const string op, const string path1, const string path2)
 {
-    if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp"))
+    if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp") || !op.compare("touch"))
 	return sendMessageToServer(op, path1, path2);
     else if(!op.compare("mkdir") || !op.compare("mvr"))
 	return central->getMessage(op, path1, path2);
@@ -38,7 +38,6 @@ bool Gateway::getMessage(const string op, const string path1, const string path2
 
 bool Gateway::sendMessageToServer(const string inst, const string path1, const string path2)
 {
-
 }
 
 #endif
