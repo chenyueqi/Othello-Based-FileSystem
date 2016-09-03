@@ -4,6 +4,8 @@
 #include"central.h"
 #include"common.h"
 #include<stack>
+#include<fstream>
+using namespace std;
 
 vector<Server> serverArr;
 Client client;
@@ -12,14 +14,17 @@ Central central;
 
 bool init();
 
-int main()
+int main(int argc, char* argv[])
 {
     init();
+
+//    ifstream file(argv[1], ios::in);
+    
 
     fprintf(stderr, "%u\n", serverArr[0].getAvailableCapacity());
 
     stack<string> st;
-    st.push("/home/user/foo");
+    st.push("/home/user");
     uint16_t serverAcceCnt = 0;
     uint8_t dcAcceCnt = 0;
     uint16_t serverResult = 0;
@@ -29,13 +34,17 @@ int main()
     fprintf(stderr, "available Capacity:%u server access count:%u dc access count:%u\n", serverArr[0].getAvailableCapacity(), serverAcceCnt, dcAcceCnt);
 
     serverArr[0].testDirFile();
+    fprintf(stderr, "\n");
 
-    st.pop();
     st.push("/home/user/foo/bar");
+    st.push("/home/user/foo");
     serverAcceCnt = 0;
     dcAcceCnt = 0;
     serverArr[0].getMessage("make directory", st , "", "", resultMap, false, 0, info,  0, serverAcceCnt, dcAcceCnt);
     fprintf(stderr, "available Capacity:%u server access count:%u dc access count:%u\n", serverArr[0].getAvailableCapacity(), serverAcceCnt, dcAcceCnt);
+
+    serverArr[0].testDirFile();
+    fprintf(stderr, "\n");
 
     st.pop();
     st.push("/home/user/foo/bar1");
@@ -44,6 +53,21 @@ int main()
     serverArr[0].getMessage("write file", st, "", "", resultMap, false, 0, info,  100 , serverAcceCnt , dcAcceCnt);
 
     serverArr[0].testDirFile();
+    fprintf(stderr, "\n");
+
+    st.pop();
+    st.push("/home/user/foo/bar2");
+    serverAcceCnt = 0;
+    dcAcceCnt = 0;
+    serverArr[0].getMessage("touch file", st, "", "", resultMap, false, 0, info,  100 , serverAcceCnt , dcAcceCnt);
+
+    serverArr[0].testDirFile();
+    fprintf(stderr, "\n");
+
+    serverArr[0].getMessage("write file", st, "", "", resultMap, false, 0, info,  100 , serverAcceCnt , dcAcceCnt);
+
+    serverArr[0].testDirFile();
+    fprintf(stderr, "\n");
 }
 
 bool init()

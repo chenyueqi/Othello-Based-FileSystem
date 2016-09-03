@@ -449,8 +449,72 @@ bool Server::rnDir(string origPre, const string newPre, map<string, uint16_t> &r
 
 bool Server::touchFile(const string fileName, const bool fileExist, vector<FileBlock> info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
-    //TODO
+    int i = 0;
+    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
+    string faName = fileName.substr(0, i);
 
+    map<string, DirFile>::iterator iter = dirFileMap.find(faName);
+
+    if(iter == dirFileMap.end()){
+	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
+	return false;
+    }
+
+    bool flag = false;
+    map<string,DirFileEntry>::iterator iter3;
+    for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
+	if(!isSameDc(iter2->serverNum, num))
+	    dcAcceCnt++;
+	else if(iter2->serverNum != num)
+	    serverAcceCnt++;
+
+	iter3 = iter2->entryMap.find(fileName);
+	// if file does not exist in this diretory file entry, check the next one 
+	if(iter3 == iter2->entryMap.end())
+	    continue;
+	else{
+	    flag = true;
+	    break;
+	}
+    }
+    if(flag){
+	fprintf(stderr, "file %s does exist %s %d\n", fileName.c_str(), __FILE__,  __LINE__);
+	return true;
+    }
+    else{
+	vector<DirBlock>::iterator iter2 = iter->second.info.end() - 1;
+	if(iter2->entryMap.size() == iter2->blockCnt * fileBlockSize / dirFileEntrySize)
+	{
+	    uint16_t num;
+	    allocDirFileServer(iter2->serverNum, num);
+	    if(num == iter2->serverNum)
+		iter2->blockCnt++;
+	    else
+	    {
+		DirBlock newDirBlock;
+		newDirBlock.serverNum = num;
+		newDirBlock.blockCnt = 1;
+		iter->second.info.push_back(newDirBlock);
+		iter2 = iter->second.info.end() - 1;
+	    }
+	    serverArr->at(num).useStorage(fileBlockSize);
+	}
+
+
+	DirFileEntry newDirFileEntry;
+	newDirFileEntry.dirOrFile = false;
+	if(fileExist == true)
+	    newDirFileEntry.info = info;
+	else{
+	    FileBlock fileBlock;
+	    allocFileServer(iter2->serverNum, fileBlock.serverNum);
+	    fileBlock.restCapacity = fileBlockSize;
+	    newDirFileEntry.info.push_back(fileBlock);
+	}
+	iter2->entryMap.insert(pair<string, DirFileEntry>(fileName, newDirFileEntry));
+	return true;
+    }
+    return false;
 }
 
 bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
@@ -465,7 +529,6 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
 	return false;
     }
-
     // check if the file exist
     bool flag = false;
     map<string,DirFileEntry>::iterator iter3;
