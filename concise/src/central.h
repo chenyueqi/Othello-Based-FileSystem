@@ -107,9 +107,10 @@ bool Central::mvrProcess(const string path1, const string path2)
     bool r1 = serverArr->at(serverNum0).getMessage("move directory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
 
     if(!r1){
-	fprintf(stderr, "%s does not exist %s %d\n", path1.c_str(), __FILE__, __LINE__);
+	fprintf(stderr, "dirctory %s dose not exist %s %d\n", path1.c_str(), __FILE__, __LINE__);
 	return false;
     }
+
 
     pathStack.pop();
 

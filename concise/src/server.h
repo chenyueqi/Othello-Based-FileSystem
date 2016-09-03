@@ -43,16 +43,14 @@ class Server{
 	map<string, DirFile> dirFileMap; //dirtory server store in this server
 
     private:
-
 	//directory operation
+	bool existDir(const string dirName);
 	bool lsDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool storeDirFile(const string dirName);
 	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, map<string, uint16_t> &resultMap, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
-	bool mvDir(const string dirName, map<string, uint16_t> &resultMap, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool mvDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool rnDir(const string origName, const string newName, map<string, uint16_t> &resultMap,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
-	bool existDir(const string dirName);
-
-	bool storeDirFile(const string dirName);
 
 	//file operation;
 	bool touchFile(const string fileName, const bool fileExist, vector<FileBlock> info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
@@ -178,20 +176,20 @@ bool Server::existDir(const string dirName)
 
 bool Server::lsDir(string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
-    map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
-    if(iter == dirFileMap.end())
+    map<string, DirFile>::iterator iter0 = dirFileMap.find(dirName);
+    if(iter0 == dirFileMap.end())
 	return false;
     else{
 	fprintf(stderr, "BEGIN\n");
-	for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
-	    if(!isSameDc(iter2->serverNum, num))
+	for(vector<DirBlock>::iterator iter1 = iter0->second.info.begin(); iter1 != iter0->second.info.end(); iter1++){
+	    if(!isSameDc(iter1->serverNum, num))
 		dcAcceCnt++;
-	    else if(iter2->serverNum != num)
+	    else if(iter1->serverNum != num)
 		serverAcceCnt++;
 
-	    for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.begin(); iter3 != iter2->entryMap.end(); iter3++){
-		fprintf(stderr, "%s\t", iter3->first.c_str());
-		if(iter3->second.dirOrFile == true)
+	    for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.begin(); iter2 != iter1->entryMap.end(); iter2++){
+		fprintf(stderr, "%s\t", iter2->first.c_str());
+		if(iter2->second.dirOrFile == true)
 		    fprintf(stderr, "directory\t");
 		else
 		    fprintf(stderr, "file\t");
@@ -216,7 +214,6 @@ bool Server::storeDirFile(string dirName)
 	DirFile newDirFile;
 	newDirFile.info.push_back(newDirBlock);
 	dirFileMap.insert(pair<string, DirFile>(dirName, newDirFile));
-
 	return true;
     }
     else{
@@ -226,31 +223,26 @@ bool Server::storeDirFile(string dirName)
     return false;
 }
 
-//if dirExist = true, do not allocate server for new directory to store relative directory file
-//else if dirExist = false, allocate server for new directory to store and also assign serverResult
 bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, map<string, uint16_t> &resultMap, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
     for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
     string faName = dirName.substr(0, i);
-
-    map<string, DirFile>::iterator iter = dirFileMap.find(faName);
-
-    // if father directory does not exist, this is fasle
-    // father directory should always exist
-    if(iter == dirFileMap.end()){
+    map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
+    if(iter0 == dirFileMap.end()){
 	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
 	return false;
     }
 
+    // go through directory file chain to check dirName has been existed
     bool flag = false;
-    for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
-	if(!isSameDc(iter2->serverNum, num))
+    for(vector<DirBlock>::iterator iter1 = iter0->second.info.begin(); iter1 != iter0->second.info.end(); iter1++){
+	if(!isSameDc(iter1->serverNum, num))
 	    dcAcceCnt++;
-	else if(iter2->serverNum != num)
+	else if(iter1->serverNum != num)
 	    serverAcceCnt++;
 
-	if(iter2->entryMap.find(dirName) == iter2->entryMap.end())
+	if(iter1->entryMap.find(dirName) == iter1->entryMap.end())
 	    continue;
 	else{
 	    flag = true;
@@ -260,22 +252,21 @@ bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t pre
 
     // if direcotory entry does not exist, do adding
     if(!flag){
-	vector<DirBlock>::iterator iter3 = iter->second.info.end() - 1;
+	vector<DirBlock>::iterator iter2 = iter0->second.info.end() - 1;
 
 	// final directory file block has been filled
-	if(iter3->entryMap.size() == iter3->blockCnt * fileBlockSize / dirFileEntrySize)
-	{
+	if(iter2->entryMap.size() == iter2->blockCnt * fileBlockSize / dirFileEntrySize){
 	    uint16_t num;
-	    allocDirFileServer(iter3->serverNum, num);
-	    if(num == iter3->serverNum)
-		iter3->blockCnt++;
+	    allocDirFileServer(iter2->serverNum, num);
+	    if(num == iter2->serverNum)
+		iter2->blockCnt++;
 	    else
 	    {
 		DirBlock newDirBlock;
 		newDirBlock.serverNum = num;
 		newDirBlock.blockCnt = 1;
-		iter->second.info.push_back(newDirBlock);
-		iter3 = iter->second.info.end() - 1;
+		iter0->second.info.push_back(newDirBlock);
+		iter2 = iter0->second.info.end() - 1;
 	    }
 	    serverArr->at(num).useStorage(fileBlockSize);
 	}
@@ -286,16 +277,18 @@ bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t pre
 	if(dirExist)
 	    entry.serverNum = preServerNum;
 	else{
-	    allocDirFileServer(iter3->serverNum, entry.serverNum);
-	    serverArr->at(entry.serverNum).storeDirFile(dirName);
-	    //serverResult = entry.serverNum;
-	    if(!isSameDc(iter3->serverNum, entry.serverNum))
+	    allocDirFileServer(iter2->serverNum, entry.serverNum);
+
+	    resultMap.insert(pair<string, uint16_t>(dirName, entry.serverNum));
+
+	    if(!isSameDc(iter2->serverNum, entry.serverNum))
 		dcAcceCnt++;
-	    else if(iter3->serverNum != entry.serverNum)
+	    else if(iter2->serverNum != entry.serverNum)
 		serverAcceCnt++;
+	    serverArr->at(entry.serverNum).storeDirFile(dirName);
 	}
 
-	iter3->entryMap.insert(pair<string, DirFileEntry>(dirName, entry));
+	iter2->entryMap.insert(pair<string, DirFileEntry>(dirName, entry));
 	return true;
     }
     else{
@@ -307,73 +300,86 @@ bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t pre
 
 bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
-    map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
+    map<string, DirFile>::iterator iter0 = dirFileMap.find(dirName);
 
-    if(iter == dirFileMap.end())
+    if(iter0 == dirFileMap.end()){
+	fprintf(stderr, "directory %s does not exist%s %d\n", dirName.c_str(), __FILE__, __LINE__);
 	return true;
+    }
     else{
-	for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
-	    if(!isSameDc(iter2->serverNum, num))
+	for(vector<DirBlock>::iterator iter1 = iter0->second.info.begin(); iter1 != iter0->second.info.end(); iter1++){
+	    if(!isSameDc(iter1->serverNum, num))
 		dcAcceCnt++;
-	    else if(iter2->serverNum != num)
+	    else if(iter1->serverNum != num)
 		serverAcceCnt++;
 
-	    for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.begin(); iter3 != iter2->entryMap.begin(); iter3++){
-		if(iter3->second.dirOrFile == true){
-		    if(!isSameDc(iter2->serverNum, iter3->second.serverNum))
+	    for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.begin(); iter2 != iter1->entryMap.begin(); iter2++){
+		if(iter2->second.dirOrFile == true){
+		    if(!isSameDc(iter1->serverNum, iter2->second.serverNum))
 			dcAcceCnt++;
-		    else if(iter2->serverNum != iter3->second.serverNum)
+		    else if(iter1->serverNum != iter2->second.serverNum)
 			serverAcceCnt++;
-
-		    serverArr->at(iter3->second.serverNum).delDir(iter3->first, serverAcceCnt, dcAcceCnt);
+		    //recursion
+		    serverArr->at(iter2->second.serverNum).delDir(iter2->first, serverAcceCnt, dcAcceCnt);
 		}
 		else{
-		    //TODO
+		    for(vector<FileBlock>::iterator iter3 = iter2->second.info.begin(); iter3 != iter2->second.info.end(); iter3++){
+			if(!isSameDc(iter3->serverNum, iter2->second.serverNum))
+			    dcAcceCnt++;
+			else if(iter3->serverNum != iter2->second.serverNum)
+			    serverAcceCnt++;
+			serverArr->at(iter3->serverNum).freeStorage(fileBlockSize - iter3->restCapacity);
+		    }
 		}
 	    }
+	    serverArr->at(iter1->serverNum).freeStorage(fileBlockSize * iter1->blockCnt);
+	    iter1->entryMap.clear();
 	}
+	iter0->second.info.clear();
+	return true;
     }
     return false;
 }
 
-bool Server::mvDir(const string dirName, map<string, uint16_t> &resultMap, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
+bool Server::mvDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
     for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
     string faName = dirName.substr(0, i);
 
-    map<string, DirFile>::iterator iter = dirFileMap.find(faName);
+    map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
 
-    if(iter == dirFileMap.end()){
+    if(iter0 == dirFileMap.end()){
 	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
 	return false;
     }
 
     bool flag = false;
-    map<string,DirFileEntry>::iterator iter3;
-    vector<DirBlock>::iterator iter2;
-    for(iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
-	if(!isSameDc(iter2->serverNum, num))
+    vector<DirBlock>::iterator iter1;
+    map<string,DirFileEntry>::iterator iter2;
+    for(iter1 = iter0->second.info.begin(); iter1 != iter0->second.info.end(); iter1++){
+	if(!isSameDc(iter1->serverNum, num))
 	    dcAcceCnt++;
-	else if(iter2->serverNum != num)
+	else if(iter1->serverNum != num)
 	    serverAcceCnt++;
 
-	iter3 = iter2->entryMap.find(dirName);
+	iter2 = iter1->entryMap.find(dirName);
 	// if file does not exist in this diretory file entry, check the next one 
-	if(iter3 == iter2->entryMap.end())
+	if(iter2 == iter1->entryMap.end())
 	    continue;
 	else{
 	    flag = true;
 	    break;
 	}
     }
+
     if(flag == true){
-	if(iter3->second.dirOrFile == false){
+	if(iter2->second.dirOrFile == false){
 	    fprintf(stderr, "this is a file %s %d\n", __FILE__, __LINE__);
 	    return false;
 	}
-	//serverResult = iter3->second.serverNum;
-	iter2->entryMap.erase(iter3);
+	else
+	    iter1->entryMap.erase(iter2);
     }
     else{
 	fprintf(stderr, "directory doesn't exist %s %d\n", __FILE__, __LINE__);
@@ -670,7 +676,7 @@ bool Server::delFile(const string fileName,uint16_t &serverAcceCnt, uint8_t &dcA
  * pathStack: organization path in stack , used by make directory operation , in other operations, only used the top entry
  * origName: 
  * newName: used by rename directory operation, recursively rename 
- * resultMap: used by make directory, rename directory operation, return new results of path-serverNumber pair, also could be used by other operation
+ * resultMap: used by make directory,  return new results of path-serverNumber pair, also could be used by other operation
  * Exist: indicate if specific directory or file has existed 
  * preServerNum: if exist = true, which indicates that related dictory has existed, preServerNum is the existed directory file's serverNum
  * info: if exist = true, which indicates that related file has existed, info is the fileblock of this file 
@@ -714,7 +720,7 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
     }
 
     else if(!op.compare("move directory"))
-	mvDir(pathStack.top(), resultMap, serverAcceCnt, dcAcceCnt);
+	mvDir(pathStack.top(), serverAcceCnt, dcAcceCnt);
 
     else if(!op.compare("rename directory"))
 	rnDir(origName, newName, resultMap, serverAcceCnt, dcAcceCnt);
