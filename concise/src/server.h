@@ -225,11 +225,11 @@ bool Server::storeDirFile(string dirName)
 bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, map<string, uint16_t> &resultMap, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
-    for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
+    for(i = dirName.size(); i > 1 && dirName[i] != '/'; i--);
     string faName = dirName.substr(0, i);
     map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
     if(iter0 == dirFileMap.end()){
-	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
+	fprintf(stderr, "BUG %s %s %d\n", dirName.c_str(),  __FILE__ , __LINE__);
 	return false;
     }
     // go through directory file chain to check dirName has been existed
@@ -340,7 +340,7 @@ bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAc
 bool Server::mvDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
-    for(i = dirName.size(); i > -1 && dirName[i] != '/'; i--);
+    for(i = dirName.size(); i > 1 && dirName[i] != '/'; i--);
     string faName = dirName.substr(0, i);
 
     map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
@@ -393,7 +393,7 @@ bool Server::rnDir(string origPre, const string newPre, map<string, uint16_t> &r
     }
      
     int i = 0;
-    for(i = origPre.size() ; i > -1 && origPre[i] != '/'; i--);
+    for(i = origPre.size() ; i > 1 && origPre[i] != '/'; i--);
     origPre = origPre.substr(0, i);
 
     vector<DirBlock> newDirBlockChain;
@@ -450,7 +450,7 @@ bool Server::rnDir(string origPre, const string newPre, map<string, uint16_t> &r
 bool Server::touchFile(const string fileName, const bool fileExist, vector<FileBlock> info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
-    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
+    for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
     string faName = fileName.substr(0, i);
 
     map<string, DirFile>::iterator iter = dirFileMap.find(faName);
@@ -520,7 +520,7 @@ bool Server::touchFile(const string fileName, const bool fileExist, vector<FileB
 bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
-    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
+    for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
     string faName = fileName.substr(0, i);
 
     map<string, DirFile>::iterator iter = dirFileMap.find(faName);
@@ -626,7 +626,7 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 bool Server::readFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
-    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
+    for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
     string faName = fileName.substr(0, i);
 
     map<string, DirFile>::iterator iter = dirFileMap.find(faName);
@@ -681,7 +681,7 @@ bool Server::readFile(const string fileName, uint64_t size, uint16_t &serverAcce
 bool Server::delFile(const string fileName,uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
-    for(i = fileName.size(); i > -1 && fileName[i] != '/'; i--);
+    for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
     string faName = fileName.substr(0, i);
 
     map<string, DirFile>::iterator iter = dirFileMap.find(faName);
@@ -774,7 +774,7 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
     else if(!op.compare("touch file"))
 	return touchFile(pathStack.top(), exist, info,  serverAcceCnt, dcAcceCnt);
 
-    else if(!op.compare("exist dirctory"))
+    else if(!op.compare("exist directory"))
 	return existDir(pathStack.top());
 
     //from centralized concise

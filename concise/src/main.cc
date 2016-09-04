@@ -34,8 +34,11 @@ int main(int argc, char* argv[])
 
     while(!file.eof()){
 	getline(file, message);
-	fprintf(stderr, "%s %s %d\n", message.c_str(),  __FILE__, __LINE__);
+	if(!message.compare(""))
+	    continue;
 	client.sendMessage(message);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", message.c_str());
 	serverArr[0].testDirFile();
 	fprintf(stderr, "\n");
     }
@@ -84,13 +87,10 @@ bool init()
 	Server s(i, defaultCapacity, &serverArr);
 	serverArr.push_back(s);
     }
-
     //init central
     central.setting(&serverArr, &gateWay);
-
     //init gateway
     gateWay.setting(&central, &serverArr);
-
     //init client
     client.setGateWay(&gateWay);
 }

@@ -66,7 +66,7 @@ bool Central::mkdirProcess(const string dirName)
 	if(!isPathExist(currentName, serverNum, serverAcceCnt, dcAcceCnt)){
 	    pathStack.push(currentName);
 	    int i = 0;
-	    for(i = currentName.size(); i > 0 && currentName[i] != '/';i--);
+	    for(i = currentName.size(); i > 1 && currentName[i] != '/';i--);
 	    currentName = currentName.substr(0, i);
 	}
 	else
@@ -80,7 +80,7 @@ bool Central::mkdirProcess(const string dirName)
 
     map<string, uint16_t> resultMap;
     vector<FileBlock> useless;
-    serverArr->at(serverNum).getMessage("make dictory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
+    serverArr->at(serverNum).getMessage("make directory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
 
 // TODO  for each result, change othelo,  build replication
 
