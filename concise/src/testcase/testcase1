@@ -1,2 +1,5 @@
+mkdir /home
+mkdir /home/user
+mkdir /home/user/foo
 mkdir /home/user/foo/bar
 write /home/user/foo/bar1

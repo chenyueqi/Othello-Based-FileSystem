@@ -11,10 +11,10 @@ class Client
 {
     private:
 	Gateway* gateWay;
-	bool sendMessage(string message);
     public:
 	Client(Gateway* p = NULL):gateWay(p){}
 	bool setGateWay(Gateway* p){gateWay = p;}
+	bool sendMessage(string message);
 
 };
 

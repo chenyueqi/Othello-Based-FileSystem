@@ -18,30 +18,35 @@ int main(int argc, char* argv[])
 {
     init();
 
-//    ifstream file(argv[1], ios::in);
-    
-
-    fprintf(stderr, "%u\n", serverArr[0].getAvailableCapacity());
-
     stack<string> st;
-    st.push("/home/user");
+    st.push("/");
     uint16_t serverAcceCnt = 0;
     uint8_t dcAcceCnt = 0;
-    uint16_t serverResult = 0;
     map<string, uint16_t> resultMap;
     vector<FileBlock> info;
     serverArr[0].getMessage("store directory file", st, "", "", resultMap , false, 0, info, 0, serverAcceCnt, dcAcceCnt);
-    fprintf(stderr, "available Capacity:%u server access count:%u dc access count:%u\n", serverArr[0].getAvailableCapacity(), serverAcceCnt, dcAcceCnt);
 
     serverArr[0].testDirFile();
     fprintf(stderr, "\n");
 
+    ifstream file(argv[1], ios::in);
+    string message;
+
+    while(!file.eof()){
+	getline(file, message);
+	fprintf(stderr, "%s %s %d\n", message.c_str(),  __FILE__, __LINE__);
+	client.sendMessage(message);
+	serverArr[0].testDirFile();
+	fprintf(stderr, "\n");
+    }
+    
+   /* 
+    st.pop();
     st.push("/home/user/foo/bar");
     st.push("/home/user/foo");
     serverAcceCnt = 0;
     dcAcceCnt = 0;
     serverArr[0].getMessage("make directory", st , "", "", resultMap, false, 0, info,  0, serverAcceCnt, dcAcceCnt);
-    fprintf(stderr, "available Capacity:%u server access count:%u dc access count:%u\n", serverArr[0].getAvailableCapacity(), serverAcceCnt, dcAcceCnt);
 
     serverArr[0].testDirFile();
     fprintf(stderr, "\n");
@@ -68,6 +73,7 @@ int main(int argc, char* argv[])
 
     serverArr[0].testDirFile();
     fprintf(stderr, "\n");
+    */
 }
 
 bool init()

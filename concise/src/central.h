@@ -66,7 +66,7 @@ bool Central::mkdirProcess(const string dirName)
 	if(!isPathExist(currentName, serverNum, serverAcceCnt, dcAcceCnt)){
 	    pathStack.push(currentName);
 	    int i = 0;
-	    for(i = currentName.size(); i > -1 && currentName[i] != '/';i--);
+	    for(i = currentName.size(); i > 0 && currentName[i] != '/';i--);
 	    currentName = currentName.substr(0, i);
 	}
 	else
@@ -74,7 +74,7 @@ bool Central::mkdirProcess(const string dirName)
     }
 
     if(pathStack.empty()){
-	fprintf(stderr, "directory already exist\n %s %d", __FILE__, __LINE__);
+	fprintf(stderr, "directory already exist %s %d\n", __FILE__, __LINE__);
 	return false;
     }
 
