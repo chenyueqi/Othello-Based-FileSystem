@@ -2,4 +2,8 @@ mkdir /home
 mkdir /home/user
 mkdir /home/user/foo
 mkdir /home/user/foo/bar
-write /home/user/foo/bar1
+touch /home/user/foo/bar1
+write /home/user/foo/bar2
+read /home/user/foo/bar2
+touch /home/user/foo/bar/foo1
+mvr /home/user/foo/bar /home/user

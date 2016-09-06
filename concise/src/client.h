@@ -24,7 +24,7 @@ bool Client::sendMessage(string message)
     string op;
     getline(me, op, ' ');
 
-    if(!op.compare("mkdir") || !op.compare("ls") || !op.compare("rm") || !op.compare("rmr") || !op.compare("write")  || !op.compare("read")){
+    if(!op.compare("mkdir") || !op.compare("ls") || !op.compare("rm") || !op.compare("rmr") || !op.compare("write")  || !op.compare("read") || !op.compare("touch")){
 	string path;
 	getline(me, path, ' ');
 	return gateWay->getMessage(op, path, "");

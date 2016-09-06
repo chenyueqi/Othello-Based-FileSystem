@@ -189,9 +189,9 @@ bool Server::lsDir(string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 	    for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.begin(); iter2 != iter1->entryMap.end(); iter2++){
 		fprintf(stderr, "%s\t", iter2->first.c_str());
 		if(iter2->second.dirOrFile == true)
-		    fprintf(stderr, "directory\t");
+		    fprintf(stderr, "directory\n");
 		else
-		    fprintf(stderr, "file\t");
+		    fprintf(stderr, "file\n");
 	    }
 	}
 	fprintf(stderr, "\nEND\n");
@@ -296,6 +296,8 @@ bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t pre
 
 bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
+
+    fprintf(stderr, "%s %s %d\n", dirName.c_str(), __FILE__, __LINE__);
     map<string, DirFile>::iterator iter0 = dirFileMap.find(dirName);
 
     if(iter0 == dirFileMap.end()){
@@ -309,7 +311,7 @@ bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAc
 	    else if(iter1->serverNum != num)
 		serverAcceCnt++;
 
-	    for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.begin(); iter2 != iter1->entryMap.begin(); iter2++){
+	    for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.begin(); iter2 != iter1->entryMap.end(); iter2++){
 		if(iter2->second.dirOrFile == true){
 		    if(!isSameDc(iter1->serverNum, iter2->second.serverNum))
 			dcAcceCnt++;
@@ -332,6 +334,7 @@ bool Server::delDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAc
 	    iter1->entryMap.clear();
 	}
 	iter0->second.info.clear();
+	dirFileMap.erase(iter0);
 	return true;
     }
     return false;
@@ -374,8 +377,10 @@ bool Server::mvDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcc
 	    fprintf(stderr, "this is a file %s %d\n", __FILE__, __LINE__);
 	    return false;
 	}
-	else
+	else{
 	    iter1->entryMap.erase(iter2);
+	    return true;
+	}
     }
     else{
 	fprintf(stderr, "directory doesn't exist %s %d\n", __FILE__, __LINE__);
@@ -408,14 +413,14 @@ bool Server::rnDir(string origPre, const string newPre, map<string, uint16_t> &r
 	newDirBlock.serverNum = iter1->serverNum;
 	newDirBlock.blockCnt = iter1->blockCnt;
 
-	for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.end(); iter2 != iter1->entryMap.begin(); iter2++){
+	for(map<string, DirFileEntry>::iterator iter2 = iter1->entryMap.begin(); iter2 != iter1->entryMap.end(); iter2++){
 
 	    DirFileEntry newDirFileEntry;
 	    newDirFileEntry.dirOrFile = iter2->second.dirOrFile;
 
 	    if(iter2->second.dirOrFile == true){
 		string suffix = iter2->first.substr(origPre.length(), iter2->first.length());
-		string newName = newPre + "/" + suffix;
+		string newName = newPre + suffix;
 
 		if(!isSameDc(iter1->serverNum, iter2->second.serverNum))
 		    dcAcceCnt++;
@@ -429,7 +434,7 @@ bool Server::rnDir(string origPre, const string newPre, map<string, uint16_t> &r
 	    }
 	    else{
 		string suffix = iter2->first.substr(origPre.length(), iter2->first.length());
-		string newName = newPre + "/" + origPre;
+		string newName = newPre + suffix;
 
 		newDirFileEntry.info = iter2->second.info;
 		newDirBlock.entryMap.insert(pair<string, DirFileEntry>(newName, newDirFileEntry));
@@ -438,7 +443,7 @@ bool Server::rnDir(string origPre, const string newPre, map<string, uint16_t> &r
 	iter1->entryMap.clear();
 	newDirBlockChain.push_back(newDirBlock);
     }
-    string newName = newPre + "/" + iter0->first.substr(origPre.length(), iter0->first.length());
+    string newName = newPre + iter0->first.substr(origPre.length(), iter0->first.length());
     dirFileMap.erase(iter0);
     DirFile newDirFile;
     newDirFile.info = newDirBlockChain;
@@ -684,24 +689,25 @@ bool Server::delFile(const string fileName,uint16_t &serverAcceCnt, uint8_t &dcA
     for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
     string faName = fileName.substr(0, i);
 
-    map<string, DirFile>::iterator iter = dirFileMap.find(faName);
+    map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
 
-    if(iter == dirFileMap.end()){
+    if(iter0 == dirFileMap.end()){
 	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
 	return false;
     }
 
     bool flag = false;
-    map<string,DirFileEntry>::iterator iter3;
-    for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++){
-	if(!isSameDc(iter2->serverNum, num))
+    vector<DirBlock>::iterator iter1;
+    map<string,DirFileEntry>::iterator iter2;
+    for(iter1 = iter0->second.info.begin(); iter1 != iter0->second.info.end(); iter1++){
+	if(!isSameDc(iter1->serverNum, num))
 	    dcAcceCnt++;
-	else if(iter2->serverNum != num)
+	else if(iter1->serverNum != num)
 	    serverAcceCnt++;
 
-	iter3 = iter2->entryMap.find(fileName);
+	iter2 = iter1->entryMap.find(fileName);
 	// if file does not exist in this diretory file entry, check the next one 
-	if(iter3 == iter2->entryMap.end())
+	if(iter2 == iter1->entryMap.end())
 	    continue;
 	else{
 	    flag = true;
@@ -710,24 +716,25 @@ bool Server::delFile(const string fileName,uint16_t &serverAcceCnt, uint8_t &dcA
     }
 
     if(flag == true){
-	if(iter3->second.dirOrFile == true){
+	if(iter2->second.dirOrFile == true){
 	    fprintf(stderr, "this is a directory %s %d\n", __FILE__, __LINE__);
 	    return false;
 	}
 
-	for(vector<FileBlock>::iterator iter4 =iter3->second.info.begin(); iter4 != iter3->second.info.end(); iter4++){
-	    if(!isSameDc(iter4->serverNum, num)){
+	for(vector<FileBlock>::iterator iter3 =iter2->second.info.begin(); iter3 != iter2->second.info.end(); iter3++){
+	    if(!isSameDc(iter3->serverNum, num)){
 		dcAcceCnt++;
 		break;
 	    }
-	    else if(iter4->serverNum != num){
+	    else if(iter3->serverNum != num){
 		serverAcceCnt++;
 		break;
 	    }
 	}
 
-	for(vector<FileBlock>::iterator iter4 = iter3->second.info.begin(); iter4 != iter3->second.info.end(); iter4++)
-	    serverArr->at(iter4->serverNum).freeStorage(fileBlockSize - iter4->restCapacity);
+	for(vector<FileBlock>::iterator iter3 = iter2->second.info.begin(); iter3 != iter2->second.info.end(); iter3++)
+	    serverArr->at(iter3->serverNum).freeStorage(fileBlockSize - iter3->restCapacity);
+	iter1->entryMap.erase(iter2);
 
 	return true;
     }
@@ -786,10 +793,10 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
     }
 
     else if(!op.compare("move directory"))
-	mvDir(pathStack.top(), serverAcceCnt, dcAcceCnt);
+	return mvDir(pathStack.top(), serverAcceCnt, dcAcceCnt);
 
     else if(!op.compare("rename directory"))
-	rnDir(origName, newName, resultMap, serverAcceCnt, dcAcceCnt);
+	return rnDir(origName, newName, resultMap, serverAcceCnt, dcAcceCnt);
 
     //from another server
     else if(!op.compare("store directory file"))

@@ -18,6 +18,7 @@ class Gateway
 	bool writeMessage(const string path);
 	bool readMessage(const string path);
 	bool rmMessage(const string path);
+	bool mvMessage(const string path1, const string path2);
 	
 	//directory related message
 	bool lsMessage(const string path);
@@ -37,7 +38,7 @@ class Gateway
 
 bool Gateway::getMessage(const string op, const string path1, const string path2)
 {
-    if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp") || !op.compare("touch"))
+    if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp") || !op.compare("touch") || !op.compare("mv"))
 	return sendMessageToServer(op, path1, path2);
     else if(!op.compare("mkdir") || !op.compare("mvr"))
 	return central->getMessage(op, path1, path2);
@@ -67,40 +68,149 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 
     else if(!op.compare("cp")) 
 	cpMessage(path1, path2);
+
+    else if(!op.compare("mv")) 
+	mvMessage(path1, path2);
 }
 
 bool Gateway::touchMessage(const string path)
 {
+    int i = 0;
+    for(i = path.size(); i > 1 && path[i] != '/'; i--);
+    string faName = path.substr(0,i);
 
+    uint16_t serverNum = 0;
+    //get faName's serverNum from othello
+    //TODO
+    stack<string> pathStack;
+    pathStack.push(path);
+    map<string, uint16_t> useless0;
+    vector<FileBlock> useless1;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    return serverArr->at(serverNum).getMessage("touch file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
 bool Gateway::writeMessage(const string path)
 {
+    int i = 0;
+    for(i = path.size(); i > 1 && path[i] != '/'; i--);
+    string faName = path.substr(0,i);
 
+    uint16_t serverNum = 0;
+    //get faName's serverNum from othello
+    //TODO
+    stack<string> pathStack;
+    pathStack.push(path);
+    map<string, uint16_t> useless0;
+    vector<FileBlock> useless1;
+
+    //TODO where is size ?
+    uint64_t size = 0;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    return serverArr->at(serverNum).getMessage("write file", pathStack, "", "", useless0, false, 0, useless1, size, serverAcceCnt, dcAcceCnt);
 }
 
 bool Gateway::readMessage(const string path)
 {
+    int i = 0;
+    for(i = path.size(); i > 1 && path[i] != '/'; i--);
+    string faName = path.substr(0,i);
+
+    uint16_t serverNum = 0;
+    //get faName's serverNum from othello
+    //TODO
+    stack<string> pathStack;
+    pathStack.push(path);
+    map<string, uint16_t> useless0;
+    vector<FileBlock> useless1;
+
+    //TODO where is size ?
+    uint64_t size = 0;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    return serverArr->at(serverNum).getMessage("read file", pathStack, "", "", useless0, false, 0, useless1, size, serverAcceCnt, dcAcceCnt);
 
 }
 
 bool Gateway::rmMessage(const string path)
 {
+    int i = 0;
+    for(i = path.size(); i > 1 && path[i] != '/'; i--);
+    string faName = path.substr(0,i);
 
+    uint16_t serverNum = 0;
+    //get faName's serverNum from othello
+    //TODO
+    stack<string> pathStack;
+    pathStack.push(path);
+    map<string, uint16_t> useless0;
+    vector<FileBlock> useless1;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    return serverArr->at(serverNum).getMessage("delete file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
 bool Gateway::lsMessage(const string path)
+{
+    uint16_t serverNum = 0;
+    //get path's serverNum from othello
+    //TODO
+    stack<string> pathStack;
+    pathStack.push(path);
+    map<string, uint16_t> useless0;
+    vector<FileBlock> useless1;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    return serverArr->at(serverNum).getMessage("list directory", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+
+}
+
+bool Gateway::mvMessage(const string path1, const string path2)
 {
 
 }
 
 bool Gateway::rmrMessage(const string path)
 {
+    int i = 0;
+    for(i = path.size(); i > 1 && path[i] != '/'; i--);
+    string faName = path.substr(0,i);
 
+    uint16_t serverNum1 = 0;
+    //get faName's serverNum from othello
+    //TODO
+    uint16_t serverNum2 = 0;
+    //get path's severNum from othello
+    //TODO
+    stack<string> pathStack;
+    pathStack.push(path);
+    map<string, uint16_t> useless0;
+    vector<FileBlock> useless1;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    serverArr->at(serverNum1).getMessage("move directory", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+
+    serverArr->at(serverNum2).getMessage("delete directory", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+    
 }
 
 bool Gateway::cpMessage(const string path1, const string path2)
 {
+    //remain to be done
 
 }
 
