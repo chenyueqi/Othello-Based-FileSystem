@@ -30,18 +30,18 @@ class Gateway
     public:
 	Gateway(Central* c = NULL, vector<Server>* server = NULL): central(c), serverArr(server){}
 	bool setting(Central* p1, vector<Server>* p2){central = p1; serverArr = p2;}
-	bool getMessage(const string op, const string path1, const string path2);
-	bool sendMessageToServer(const string op, const string path1, const string path2);
+	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir);
+	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir);
 	//TODO update othello
 	bool getUpdate();
 };
 
-bool Gateway::getMessage(const string op, const string path1, const string path2)
+bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir)
 {
     if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp") || !op.compare("touch") || !op.compare("mv"))
-	return sendMessageToServer(op, path1, path2);
+	return sendMessageToServer(op, path1, path2, id1, id2, newdir);
     else if(!op.compare("mkdir") || !op.compare("mvr"))
-	return central->getMessage(op, path1, path2);
+	return central->getMessage(op, path1, path2, id1, id2, newdir);
     else
 	return false;
 }
@@ -50,7 +50,7 @@ bool Gateway::getMessage(const string op, const string path1, const string path2
  * touch, write, read, remove, cp, move for file and recursive remove 
  * has nothing to do with metadata in othello
  */
-bool Gateway::sendMessageToServer(const string op, const string path1, const string path2)
+bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir)
 {
     if(!op.compare("touch"))
 	touchMessage(path1);
