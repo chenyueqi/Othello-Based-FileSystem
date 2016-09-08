@@ -30,10 +30,10 @@ class Gateway
     public:
 	Gateway(Central* c = NULL, vector<Server>* server = NULL): central(c), serverArr(server){}
 	bool setting(Central* p1, vector<Server>* p2){central = p1; serverArr = p2;}
-
 	bool getMessage(const string op, const string path1, const string path2);
-
 	bool sendMessageToServer(const string op, const string path1, const string path2);
+	//TODO update othello
+	bool getUpdate();
 };
 
 bool Gateway::getMessage(const string op, const string path1, const string path2)
@@ -46,6 +46,10 @@ bool Gateway::getMessage(const string op, const string path1, const string path2
 	return false;
 }
 
+/*
+ * touch, write, read, remove, cp, move for file and recursive remove 
+ * has nothing to do with metadata in othello
+ */
 bool Gateway::sendMessageToServer(const string op, const string path1, const string path2)
 {
     if(!op.compare("touch"))
@@ -179,7 +183,41 @@ bool Gateway::lsMessage(const string path)
 
 bool Gateway::mvMessage(const string path1, const string path2)
 {
+    uint16_t serverNum0 = 0;
+    uint16_t serverNum1 = 0;
+    //TODO
+    //path0 =  path1's father
+    //serverNum0 = get path0 from othello
+    //serverNum1 = get path2 from othello
 
+    stack<string> pathStack;
+    pathStack.push(path1);
+    map<string, uint16_t> resultMap;
+    vector<FileBlock> info;
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+    bool r1= serverArr->at(serverNum0).getMessage("move file", pathStack, "", "", resultMap, false, 0, info, 0, serverAcceCnt, dcAcceCnt);
+
+    if(!r1){
+	fprintf(stderr, "file %s does not exist %s %d\n", path1.c_str(), __FILE__, __LINE__);
+	return false;
+    }
+
+    pathStack.pop();
+
+    int i = 0;
+    for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
+    string temp = path1.substr(0, i);
+    string suffix = path1.substr(temp.length(), path1.length());
+    string newName = path2 + suffix;
+
+    pathStack.push(newName);
+
+    serverArr->at(serverNum1).getMessage("touch file", pathStack, "", "", resultMap, true, 0, info, 0, serverAcceCnt, dcAcceCnt);
+
+    return true;
+    //TODO
+    //build replications
 }
 
 bool Gateway::rmrMessage(const string path)

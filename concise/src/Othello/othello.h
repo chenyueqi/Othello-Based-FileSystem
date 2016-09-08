@@ -129,7 +129,7 @@ public:
      \note keycount should not exceed 2^29 for memory consideration.
      \n when *_values* is empty, classify keys into two sets X and Y, defined as follow: for each connected compoenents in G, select a node as the root, mark all edges in this connected compoenent as pointing away from the root. for all edges from U to V, query result is 1 (k in Y), for all edges from V to u, query result is 0 (k in X).
     */
-    Othello(uint8_t _L, keyType *_keys,  uint32_t keycount, bool _autoclear = true, void *_values = NULL, size_t _valuesize = 0  ) {
+    Othello(uint8_t _L, keyType *_keys=NULL,  uint32_t keycount=0, bool _autoclear = true, void *_values = NULL, size_t _valuesize = 0) {
         L = _L;
         autoclear = _autoclear;
         keys = _keys;

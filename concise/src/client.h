@@ -7,10 +7,15 @@
 #include"gateway.h"
 using namespace std;
 
+
 class Client
 {
     private:
 	Gateway* gateWay;
+	map<string, uint64_t> directoryId;
+	bool getDirId(string name, uint64_t &id);
+	bool getFaId(string name, uint64_t &id);
+
     public:
 	Client(Gateway* p = NULL):gateWay(p){}
 	bool setGateWay(Gateway* p){gateWay = p;}
@@ -18,6 +23,37 @@ class Client
 
 };
 
+bool Client::getDirId(string name, uint64_t &id)
+{
+    map<string, uint64_t>::iterator iter = directoryId.find(name);
+
+    if(iter == directoryId.end()){
+	fprintf(stderr, "directory %s does not exist %s %d\n", name.c_str(), __FILE__, __LINE__);
+	return false;
+    }
+    id = iter->second;
+    return true;
+}
+
+bool Client::getFaId(string name, uint64_t &id)
+{
+    while(true){
+	int i = 0;
+	for(i = name.size(); i > 1 && name[i] != '/'; i--);
+	string name = name.substr(0,i);
+
+	map<string, uint64_t>::iterator iter = directoryId.find(name);
+	if(iter != directoryId.end()){
+	    id = iter->second;
+	    return true;
+	}
+    }
+}
+
+/*
+ * support mkdir, list, recursive remove, recursive move for directory
+ * support remove, write, read, touch, move, cp for file
+ */
 bool Client::sendMessage(string message)
 {
     stringstream me(message);

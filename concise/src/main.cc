@@ -18,6 +18,11 @@ int main(int argc, char* argv[])
 {
     init();
 
+
+    uint64_t key = 0;
+
+    keyConvert("/2/3/6/2/12", key);
+    return 0;
     stack<string> st;
     st.push("/");
     uint16_t serverAcceCnt = 0;
@@ -26,11 +31,11 @@ int main(int argc, char* argv[])
     vector<FileBlock> info;
     serverArr[0].getMessage("store directory file", st, "", "", resultMap , false, 0, info, 0, serverAcceCnt, dcAcceCnt);
 
+    ifstream file(argv[1], ios::in);
+    string message;
     serverArr[0].testDirFile();
     fprintf(stderr, "\n");
 
-    ifstream file(argv[1], ios::in);
-    string message;
 
     while(!file.eof()){
 	getline(file, message);
@@ -82,13 +87,14 @@ int main(int argc, char* argv[])
 bool init()
 {
     //init servers
-    uint16_t serverPerDc = 128;
+    uint16_t serverPerDc = 1<<serverPerDcBit;
     for(int i = 0 ; i < serverPerDc * 1<<dcBit ; i++){
 	Server s(i, defaultCapacity, &serverArr);
 	serverArr.push_back(s);
     }
     //init central
     central.setting(&serverArr, &gateWay);
+    central.testOthello();
     //init gateway
     gateWay.setting(&central, &serverArr);
     //init client

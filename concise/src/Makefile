@@ -1,8 +1,8 @@
 CC=g++
-CFLAGS=  -Wno-unused-result
+CFLAGS= -std=c++11 -Wno-unused-result
 
-CFILES = $(shell find ./ -name "*.cc")
-HFILES = $(shell find ./ -name "*.h")
+CFILES = $(shell find . -maxdepth 1 -name "*.cc")
+HFILES = $(shell find . -maxdepth 1 -name "*.h")
 OBJS = $(CFILES:.cc=.o)
 
 main: $(CFILES) $(HFILES)

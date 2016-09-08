@@ -1,5 +1,9 @@
 # multi-dc
-This is a simulation experiment to test a design of multi-datacenter file system, which based on Othello.
+This is a simulation experiment to verify a design of multi-datacenter file system, which based on Othello.
+
+The baseline is consistant hash method.
+
+In each directory has a more detailed README.
 
 ## Author
 Yueqi Chen (Yueqichen.0x0@gmail.com)

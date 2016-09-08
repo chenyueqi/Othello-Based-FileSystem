@@ -5,5 +5,6 @@ mkdir /home/user/foo/bar
 touch /home/user/foo/bar1
 write /home/user/foo/bar2
 read /home/user/foo/bar2
+mv /home/user/foo/bar1 /home/user/foo/bar
 touch /home/user/foo/bar/foo1
 mvr /home/user/foo/bar /home/user

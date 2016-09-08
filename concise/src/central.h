@@ -8,15 +8,18 @@
 #include"common.h"
 #include<map>
 #include"server.h"
+#include"./Othello/othello.h"
 using namespace std;
 
 
 class Central
 {
     private:
+	uint64_t prekey;
+	uint16_t prevalue;
 	vector<Server>* serverArr;
 	Gateway* gateway;
-	//TODO Othello
+	Othello<uint64_t> oth;
 	
     private:
 	bool mkdirProcess(const string dirName);
@@ -26,12 +29,23 @@ class Central
 	bool isPathExist(const string path, uint16_t &serverNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 
     public:
-	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g){}
+	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(1), oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)){}
 	bool setting(vector<Server>* s, Gateway* g){serverArr = s; gateway = g;}
-
 	bool getMessage(const string op, const string path1, const string path2);
+	bool testOthello();
+	//TODO update othello to all friends
+	bool updateGateway();
 };
 
+bool Central::testOthello()
+{
+    uint16_t key = 0;
+    fprintf(stderr, "%u %s %d\n", oth.queryInt(key), __FILE__, __LINE__);
+}
+
+/*
+ * support mkdir, recursive mv for directory
+ */
 bool Central::getMessage(const string op, const string path1, const string path2)
 {
     if(!op.compare("mkdir"))
@@ -115,13 +129,17 @@ bool Central::mvrProcess(const string path1, const string path2)
 
     serverArr->at(serverNum1).getMessage("rename directory", pathStack, path1, path2, resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
 
-    //TODO push new name directory to pathStack
+    int i = 0;
+    for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
+    string temp = path1.substr(0,i);
+    string suffix = path1.substr(temp.length(), path1.length());
+    string newName = path2 + suffix;
+    pathStack.push(newName);
     serverArr->at(serverNum2).getMessage("make directory", pathStack , "", "", resultMap, true, serverNum1, useless, 0, serverAcceCnt, dcAcceCnt);
    
     return true;
     //TODO
     //for each result in resultMap, add to othello and  build replication 
 }
-
 
 #endif
