@@ -20,6 +20,8 @@ class Central
 	vector<Server>* serverArr;
 	Gateway* gateway;
 	Othello<uint64_t> oth;
+	//FIXME  currentId should be substituted by id pool
+	uint64_t currentId;
 	
     private:
 	bool mkdirProcess(const string dirName);
@@ -29,9 +31,9 @@ class Central
 	bool isPathExist(const string path, uint16_t &serverNum, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 
     public:
-	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(1), oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)){}
+	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(1), oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)), currentId(1){}
 	bool setting(vector<Server>* s, Gateway* g){serverArr = s; gateway = g;}
-	bool getMessage(const string op, const string path1, const string path2);
+	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir);
 	bool testOthello();
 	//TODO update othello to all friends
 	bool updateGateway();
@@ -46,7 +48,7 @@ bool Central::testOthello()
 /*
  * support mkdir, recursive mv for directory
  */
-bool Central::getMessage(const string op, const string path1, const string path2)
+bool Central::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir)
 {
     if(!op.compare("mkdir"))
 	return mkdirProcess(path1);

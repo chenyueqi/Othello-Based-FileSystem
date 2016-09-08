@@ -18,11 +18,6 @@ int main(int argc, char* argv[])
 {
     init();
 
-
-    uint64_t key = 0;
-
-    keyConvert("/2/3/6/2/12", key);
-    return 0;
     stack<string> st;
     st.push("/");
     uint16_t serverAcceCnt = 0;

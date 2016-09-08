@@ -22,25 +22,4 @@ class Central;
 class Server;
 class Client;
 
-// I consider the path is only consisted of "/" and positive numbers
-// which is  (/|(1-9)+)+ in regular expression
-bool keyConvert(char* path, uint64_t &key)
-{
-    key = 0;
-    for(int i = strlen(path)-1; i > 0 ; i--)
-    {
-	fprintf(stderr, "%c ", path[i]);
-	if(path[i] == '/')
-	    key *= 10;
-	else
-	{
-	    key *= 10;
-	    key += path[i]-'0';
-	}
-    fprintf(stderr, "%u\n", key);
-    }
-    fprintf(stderr, "%u\n", key);
-}
-
-
 #endif

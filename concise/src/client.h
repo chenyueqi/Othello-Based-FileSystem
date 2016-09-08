@@ -7,7 +7,6 @@
 #include"gateway.h"
 using namespace std;
 
-
 class Client
 {
     private:
@@ -23,7 +22,14 @@ class Client
 	    directoryId.insert(pair<string, uint64_t>("/", 0));
 	}
 	bool sendMessage(string message);
+	bool testDirID();
 };
+
+bool Client::testDirID()
+{
+    for(map<string, uint64_t>::iterator iter = directoryId.begin(); iter != directoryId.end(); iter++)
+	fprintf(stderr, "%s %u\n", iter->first.c_str(), iter->second);
+}
 
 bool Client::getDirId(string name, uint64_t &id)
 {
@@ -37,12 +43,14 @@ bool Client::getDirId(string name, uint64_t &id)
     return true;
 }
 
+// get the id of name's father
 bool Client::getFaId(string name, uint64_t &id)
 {
     while(true){
 	int i = 0;
 	for(i = name.size(); i > 1 && name[i] != '/'; i--);
-	string name = name.substr(0,i);
+	string faName = name.substr(0,i);
+	name = faName;
 
 	map<string, uint64_t>::iterator iter = directoryId.find(name);
 	if(iter != directoryId.end()){
@@ -63,21 +71,31 @@ bool Client::sendMessage(string message)
     getline(me, op, ' ');
 
     map<string, uint64_t> newdir;
+    vector<string> olddir;
 
     if(!op.compare("mkdir") || !op.compare("rm") || !op.compare("write")  || !op.compare("read") || !op.compare("touch")){
 	string path;
 	getline(me, path, ' ');
 	uint64_t id;
 	getFaId(path, id);
-	gateWay->getMessage(op, path, "", id, 0, newdir);
+	gateWay->getMessage(op, path, "", id, 0, newdir, olddir);
     }
 
-    else if(!op.compare("ls") || !op.compare("rmr")){
+    else if(!op.compare("rmr")){
+	string path;
+	getline(me, path, ' ');
+	uint64_t id1, id2;
+	getDirId(path, id1);
+	getFaId(path, id2);
+	gateWay->getMessage(op, path, "", id1, id2, newdir, olddir);
+    }
+
+    else if(!op.compare("ls")){
 	string path;
 	getline(me, path, ' ');
 	uint64_t id;
 	getDirId(path, id);
-	gateWay->getMessage(op, path, "", id, 0, newdir);
+	gateWay->getMessage(op, path, "", id, 0, newdir, olddir);
     }
 
     else if(!op.compare("mv")){
@@ -87,7 +105,7 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getFaId(path1, id1);
 	getDirId(path2, id2);
-	gateWay->getMessage(op, path1, path2, id1, id2, newdir);
+	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir);
     }
 
     else if(!op.compare("mvr")){
@@ -97,7 +115,7 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getDirId(path1, id1);
 	getDirId(path2, id2);
-	gateWay->getMessage(op, path1, path2, id1, id2, newdir);
+	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir);
     }
 
     else if(!op.compare("cp")){
@@ -107,12 +125,17 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getFaId(path1, id1);
 	getFaId(path2, id2);
-	gateWay->getMessage(op, path1, path2, id1, id2, newdir);
+	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir);
     }
 
     else{
 	fprintf(stderr, "INVALID operation %s %d\n", __FILE__, __LINE__);
 	return false;
+    }
+
+    for(vector<string>::iterator iter0 = olddir.begin(); iter0 != olddir.end(); iter0++){
+	map<string, uint64_t>::iterator iter1 = directoryId.find(*iter0);
+	directoryId.erase(iter1);
     }
 
     for(map<string, uint64_t>::iterator iter = newdir.begin(); iter != newdir.end(); iter++)
