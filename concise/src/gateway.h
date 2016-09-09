@@ -15,7 +15,7 @@ class Gateway
 
 	//file related message
 	bool touchMessage(const string path, const uint64_t id);
-	bool writeMessage(const string path, const uint64_t id);
+	bool writeMessage(const string path, const uint64_t id, const uint64_t size);
 	bool readMessage(const string path, const uint64_t id);
 	bool rmMessage(const string path, const uint64_t id);
 	bool mvMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2);
@@ -33,7 +33,7 @@ class Gateway
 	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir);
 	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir);
 
-	//TODO update othello
+	//TODO update othello and idBitMap
 	bool getUpdate();
 };
 
@@ -56,8 +56,9 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
     if(!op.compare("touch"))
 	touchMessage(path1, id1);
 
+    //id2 means size in write operation
     else if(!op.compare("write")) 
-	writeMessage(path1 , id1);
+	writeMessage(path1 , id1, id2);
 
     else if(!op.compare("read")) 
 	readMessage(path1, id1);
@@ -93,7 +94,7 @@ bool Gateway::touchMessage(const string path, const uint64_t id)
     return serverArr->at(serverNum).getMessage("touch file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
-bool Gateway::writeMessage(const string path, const uint64_t id)
+bool Gateway::writeMessage(const string path, const uint64_t id, const uint64_t size)
 {
     uint16_t serverNum = 0;
     //get faName's serverNum from othello using id
@@ -102,9 +103,6 @@ bool Gateway::writeMessage(const string path, const uint64_t id)
     pathStack.push(path);
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
-
-    //TODO where is size ?
-    uint64_t size = 0;
 
     uint16_t serverAcceCnt = 0;
     uint8_t dcAcceCnt = 0;
@@ -122,13 +120,10 @@ bool Gateway::readMessage(const string path, const uint64_t id)
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
 
-    //TODO where is size ?
-    uint64_t size = 0;
-
     uint16_t serverAcceCnt = 0;
     uint8_t dcAcceCnt = 0;
 
-    return serverArr->at(serverNum).getMessage("read file", pathStack, "", "", useless0, false, 0, useless1, size, serverAcceCnt, dcAcceCnt);
+    return serverArr->at(serverNum).getMessage("read file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
 bool Gateway::rmMessage(const string path, const uint64_t id)

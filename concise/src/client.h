@@ -73,12 +73,22 @@ bool Client::sendMessage(string message)
     map<string, uint64_t> newdir;
     vector<string> olddir;
 
-    if(!op.compare("mkdir") || !op.compare("rm") || !op.compare("write")  || !op.compare("read") || !op.compare("touch")){
+    if(!op.compare("mkdir") || !op.compare("rm") || !op.compare("read") || !op.compare("touch")){
 	string path;
 	getline(me, path, ' ');
 	uint64_t id;
 	getFaId(path, id);
 	gateWay->getMessage(op, path, "", id, 0, newdir, olddir);
+    }
+
+    else if(!op.compare("write")){
+	string path;
+	getline(me, path, ' ');
+	uint64_t id;
+	getFaId(path, id);
+	uint64_t size = 0;
+	me>>size;
+	gateWay->getMessage(op, path, "", id, size, newdir, olddir);
     }
 
     else if(!op.compare("rmr")){

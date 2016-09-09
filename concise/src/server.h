@@ -44,7 +44,7 @@ class Server{
 
     private:
 	//directory operation
-	bool existDir(const string dirName);
+	bool existDir(const string dirName, map<string , uint16_t> &candidate);
 	bool lsDir(const string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool storeDirFile(const string dirName);
 	bool mkDir(const string dirName, const bool dirExist, const uint16_t preServerNum, map<string, uint16_t> &resultMap, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
@@ -55,7 +55,7 @@ class Server{
 	//file operation;
 	bool touchFile(const string fileName, const bool fileExist, vector<FileBlock> info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool writeFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
-	bool readFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool readFile(const string fileName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool delFile(const string fileName,uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool mvFile(const string fileName, vector<FileBlock> &info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool cpFile(const string fileName, vector<FileBlock> &info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
@@ -166,13 +166,21 @@ void Server::testDirFile()
     }
 }
 
-bool Server::existDir(const string dirName)
+bool Server::existDir(const string dirName, map<string, uint16_t> &candidate)
 {
-    map<string, DirFile>::iterator iter = dirFileMap.find(dirName);
-    if(iter == dirFileMap.end())
-	return false;
-    else
-	return true;
+    string name = dirName;
+    while(true){
+	map<string, DirFile>::iterator iter = dirFileMap.find(name);
+	if(iter == dirFileMap.end())
+	    candidate.insert(pair<string, uint16_t>(name, 0));
+	else 
+	    break;
+
+	int i = 0;
+	for(i = name.size(); i > 1 && name[i] != '/' ;i--);
+	string faName = name.substr(0,i);
+	name = faName;
+    }
 }
 
 bool Server::lsDir(string dirName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
@@ -567,6 +575,7 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 	while(size > 0){
 	    if(iter4->restCapacity > size){
 		iter4->restCapacity -= size;
+		serverArr->at(iter4->serverNum).useStorage(size);
 		return true;
 	    }
 	    else{
@@ -577,6 +586,7 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 		fileBlock.restCapacity = fileBlockSize;
 		iter3->second.info.push_back(fileBlock);
 		iter4 = iter3->second.info.end() - 1;
+		serverArr->at(iter4->serverNum).useStorage(fileBlockSize);
 	    }
 	}
 	return true;
@@ -609,8 +619,9 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 
 	vector<FileBlock>::iterator iter4 = newDirFileEntry.info.end() - 1;
 	while(size > 0){
-	    if(iter4->restCapacity > size){
+	    if(iter4->restCapacity >= size){
 		iter4->restCapacity -= size;
+		serverArr->at(iter4->serverNum).useStorage(size);
 		break;
 	    }
 	    else{
@@ -621,6 +632,7 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
 		fileBlock.restCapacity = fileBlockSize;
 		newDirFileEntry.info.push_back(fileBlock);
 		iter4 = newDirFileEntry.info.end() - 1;
+		serverArr->at(iter4->serverNum).useStorage(fileBlockSize);
 	    }
 	}
 
@@ -630,7 +642,7 @@ bool Server::writeFile(const string fileName, uint64_t size, uint16_t &serverAcc
     return false;
 }
 
-bool Server::readFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
+bool Server::readFile(const string fileName, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
 {
     int i = 0;
     for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
@@ -871,7 +883,7 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
 	return writeFile(pathStack.top(), size, serverAcceCnt, dcAcceCnt);
 
     else if(!op.compare("read file"))
-	return readFile(pathStack.top(), size, serverAcceCnt, dcAcceCnt);
+	return readFile(pathStack.top(), serverAcceCnt, dcAcceCnt);
     
     else if(!op.compare("delete file"))
 	return delFile(pathStack.top(), serverAcceCnt, dcAcceCnt);
@@ -886,7 +898,7 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
 	return cpFile(pathStack.top(), info, serverAcceCnt, dcAcceCnt);
 
     else if(!op.compare("exist directory"))
-	return existDir(pathStack.top());
+	return existDir(pathStack.top(), resultMap);
 
     //from centralized concise
     else if(!op.compare("make directory")){

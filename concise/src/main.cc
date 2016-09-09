@@ -36,9 +36,9 @@ int main(int argc, char* argv[])
 	getline(file, message);
 	if(!message.compare(""))
 	    continue;
-	client.sendMessage(message);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "%s\n", message.c_str());
+	client.sendMessage(message);
 	serverArr[0].testDirFile();
 	fprintf(stderr, "\n");
     }
