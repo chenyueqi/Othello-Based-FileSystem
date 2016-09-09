@@ -58,6 +58,7 @@ class Server{
 	bool readFile(const string fileName, uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool delFile(const string fileName,uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 	bool mvFile(const string fileName, vector<FileBlock> &info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool cpFile(const string fileName, vector<FileBlock> &info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 
 	//check server to find appropriate server for storage
 	bool allocDirFileServer(const uint16_t reference, uint16_t &serverResult);
@@ -753,7 +754,7 @@ bool Server::mvFile(const string fileName, vector<FileBlock> &info, uint16_t &se
     map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
 
     if(iter0 == dirFileMap.end()){
-	fprintf(stderr, "BUG %s %d\n", __FILE__ , __LINE__);
+	fprintf(stderr, "directory %s %s %d\n", faName.c_str(), __FILE__ , __LINE__);
 	return false;
     }
 
@@ -784,6 +785,54 @@ bool Server::mvFile(const string fileName, vector<FileBlock> &info, uint16_t &se
 	else{
 	    info = iter2->second.info;
 	    iter1->entryMap.erase(iter2);
+	    return true;
+	}
+    }
+    else{
+	fprintf(stderr, "file %s doesn't exist %s %d\n",fileName.c_str(), __FILE__, __LINE__);
+	return false;
+    }
+}
+
+bool Server::cpFile(const string fileName, vector<FileBlock> &info, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
+{
+    int i = 0;
+    for(i = fileName.size(); i > 1 && fileName[i] != '/'; i--);
+    string faName = fileName.substr(0, i);
+
+    map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
+
+    if(iter0 == dirFileMap.end()){
+	fprintf(stderr, "directory %s %s %d\n", faName.c_str(),  __FILE__ , __LINE__);
+	return false;
+    }
+
+    bool flag = false;
+    vector<DirBlock>::iterator iter1;
+    map<string,DirFileEntry>::iterator iter2;
+    for(iter1 = iter0->second.info.begin(); iter1 != iter0->second.info.end(); iter1++){
+	if(!isSameDc(iter1->serverNum, num))
+	    dcAcceCnt++;
+	else if(iter1->serverNum != num)
+	    serverAcceCnt++;
+
+	iter2 = iter1->entryMap.find(fileName);
+	// if file does not exist in this diretory file entry, check the next one 
+	if(iter2 == iter1->entryMap.end())
+	    continue;
+	else{
+	    flag = true;
+	    break;
+	}
+    }
+    
+    if(flag){
+	if(iter2->second.dirOrFile == true){
+	    fprintf(stderr, "%s is a directory %s %d", fileName.c_str(), __FILE__, __LINE__);
+	    return false;
+	}
+	else{
+	    info = iter2->second.info;
 	    return true;
 	}
     }
@@ -833,6 +882,9 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
     else if(!op.compare("move file"))
 	return mvFile(pathStack.top(), info, serverAcceCnt, dcAcceCnt);
 
+    else if(!op.compare("copy file"))
+	return cpFile(pathStack.top(), info, serverAcceCnt, dcAcceCnt);
+
     else if(!op.compare("exist directory"))
 	return existDir(pathStack.top());
 
@@ -853,6 +905,12 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
     //from another server
     else if(!op.compare("store directory file"))
 	storeDirFile(pathStack.top());
+
+    else{
+	fprintf(stderr, "INVALID OPeration %s %d\n", __FILE__, __LINE__);
+
+    }
+
 }
 
 #endif

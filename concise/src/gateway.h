@@ -204,10 +204,6 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint64_t i
 
 bool Gateway::rmrMessage(const string path, const uint64_t id1, const uint64_t id2, vector<string> &olddir)
 {
-    int i = 0;
-    for(i = path.size(); i > 1 && path[i] != '/'; i--);
-    string faName = path.substr(0,i);
-
     //TODO
     //get faName's serverNum from othello using id1
     //get path's severNum from othello using id2
@@ -235,6 +231,27 @@ bool Gateway::rmrMessage(const string path, const uint64_t id1, const uint64_t i
 bool Gateway::cpMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2)
 {
     //TODO
+    //get the serverNum of path1's father from othello using id1
+    //get the serverNum of path2's father from othello using id2
+    uint16_t serverNum1 = 0;
+    uint16_t serverNum2 = 0;
+    stack<string> pathStack;
+    pathStack.push(path1);
+    map<string, uint16_t> useless;
+    vector<FileBlock> info;
+
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+
+    serverArr->at(serverNum1).getMessage("copy file", pathStack, "", "", useless, false, 0, info, 0, serverAcceCnt, dcAcceCnt);
+
+    uint64_t size = 0;
+    for(vector<FileBlock>::iterator iter = info.begin(); iter != info.end(); iter++)
+	size += (fileBlockSize - iter->restCapacity);
+
+    pathStack.pop();
+    pathStack.push(path2);
+    serverArr->at(serverNum2).getMessage("write file", pathStack, "", "", useless, false, 0, info, size, serverAcceCnt, dcAcceCnt);
 }
 
 #endif
