@@ -100,12 +100,18 @@ class Server{
 	bool getMessage(const string op, stack<string> pathStack, const string origName, const string newName, map<string, uint16_t> &resultMap, const bool exist, const uint16_t preServerNum, vector<FileBlock> &info, const uint64_t size,   uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
 };
 
+// |         | dcBit|        |
+// | ID-high | DC   | ID-low |
 bool Server::allocDirFileServer(const uint16_t reference, uint16_t &serverResult)
 {
-    uint16_t high = reference >> dcBit;
-    uint16_t low = reference - (high << dcBit);
+    uint16_t reference1 = 0x0004;
+    uint16_t idHigh = reference1 >> (1+dcBit);
+    uint16_t dc = (reference1 - (idHigh << (dcBit+1))) >> 1;
+    uint16_t idLow = reference1 - (idHigh << (dcBit+1)) - (dc << 1);
+    uint16_t id = (idHigh<<1)+idLow;
+    id++;
 
-    fprintf(stderr, "high: %u, low: %u %s %d\n", high, low, __FILE__, __LINE__);
+//    fprintf(stderr, "idHigh: %u, dc: %u, idLow: %u  id: %x, %s %d\n", idHigh, dc, idLow, (((id>>1)<<(dcBit+1)) + (dc<<1) + (id&0x1)), __FILE__, __LINE__);
 
     //if reference server has enough capacity
     if(serverArr->at(reference).getAvailableCapacity() > fileBlockSize){
@@ -114,33 +120,37 @@ bool Server::allocDirFileServer(const uint16_t reference, uint16_t &serverResult
     }
     else{
 
-	uint16_t high = reference >> dcBit;
-	uint16_t low = reference - (high << dcBit);
+	uint16_t idHigh = reference >> (1+dcBit);
+	uint16_t dc = (reference - (idHigh << (dcBit+1))) >> 1;
+	uint16_t idLow = reference - (idHigh << (dcBit+1)) - (dc << 1);
+	uint16_t id = (idHigh<<1) + idLow;
 
 	uint16_t serverPerDc = serverArr->size() / (1<<dcBit);
 
 	//FIXME if all the servers in a datacenter do not have storage ?
-	while(!(serverArr->at(high<<dcBit + low).getAvailableCapacity() > fileBlockSize))
-	    high = (high + 1)%serverPerDc;
+	while(!(serverArr->at(((id>>1)<<(dcBit+1)) + (dc<<1) + (id&0x1)).getAvailableCapacity() > fileBlockSize))
+	    id = (id + 1)%serverPerDc;
 
-	serverResult = high << dcBit + low;
+	serverResult = (((id>>1) << (dcBit+1)) + (dc<<1) + (id&0x1));
+	return true;
     }
 }
 
 bool Server::allocFileServer(const uint16_t reference, uint16_t &serverResult)
 {
-    uint16_t high = reference >> dcBit;
-    uint16_t low = reference - (high << dcBit);
+    uint16_t idHigh = reference >> (1+dcBit);
+    uint16_t dc = (reference - (idHigh << (dcBit+1))) >> 1;
+    uint16_t idLow = reference - (idHigh << (dcBit+1)) - (dc << 1);
 
     uint16_t serverPerDc = serverArr->size() / (1<<dcBit);
 
-    uint16_t candidate = (rand()%serverPerDc)<<dcBit+low;
+    uint16_t id = (rand()%serverPerDc);
 
     //FIXME if all the servers in a datacenter do not have storage ?
-    while(!(serverArr->at(candidate).getAvailableCapacity() > 0))
-	candidate = (rand()%serverPerDc)<<dcBit + low;
+    while(!(serverArr->at(((id>>1)<<(dcBit+1)) + (dc<<1) + (id&0x1)).getAvailableCapacity() > 0))
+	id = (rand()%serverPerDc);
 
-    serverResult = candidate;
+    serverResult = (((id>>1) << (dcBit+1)) + (dc<<1) + (id&0x1));
 
     return true; 
 }
@@ -149,18 +159,18 @@ void Server::testDirFile()
 {
     for(map<string, DirFile>::iterator iter = dirFileMap.begin(); iter != dirFileMap.end(); iter++)
     {
-	fprintf(stderr, "%s\n", iter->first.c_str());
+	fprintf(stdout, "%s\n", iter->first.c_str());
 
 	for(vector<DirBlock>::iterator iter2 = iter->second.info.begin(); iter2 != iter->second.info.end(); iter2++)
 	    for(map<string, DirFileEntry>::iterator iter3 = iter2->entryMap.begin(); iter3 !=iter2->entryMap.end(); iter3++){
-		fprintf(stderr, "  %s", iter3->first.c_str());
+		fprintf(stdout, "  %s", iter3->first.c_str());
 		if(iter3->second.dirOrFile == true)
-		    fprintf(stderr, "  directory  %u\n",  iter3->second.serverNum);
+		    fprintf(stdout, "  directory  %u\n",  iter3->second.serverNum);
 		else{ 
-		    fprintf(stderr, "  file");
+		    fprintf(stdout, "  file");
 		    for(vector<FileBlock>::iterator iter4 = iter3->second.info.begin(); iter4 != iter3->second.info.end(); iter4++)
-			fprintf(stderr, "  0x%x-%u", iter4->serverNum, (unsigned int)iter4->restCapacity);
-		    fprintf(stderr, "\n");
+			fprintf(stdout, "  0x%x-%u", iter4->serverNum, (unsigned int)iter4->restCapacity);
+		    fprintf(stdout, "\n");
 		}
 	    }
     }
@@ -922,7 +932,6 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
 	fprintf(stderr, "INVALID OPeration %s %d\n", __FILE__, __LINE__);
 
     }
-
 }
 
 #endif

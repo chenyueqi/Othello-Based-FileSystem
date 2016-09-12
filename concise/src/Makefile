@@ -9,7 +9,7 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ./testcase/testcase1
+	./main ./testcase/dirmeta
 
 clean: 
 	rm -rf main

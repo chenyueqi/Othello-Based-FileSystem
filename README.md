@@ -10,3 +10,4 @@ Yueqi Chen (Yueqichen.0x0@gmail.com)
 
 ## Acknowledge
 Thanks a lot to [sdyy (Ye Yu)](https://github.com/sdyy1990) for his outstanding work on Othello as well as his selfless help.
+Thanks a lot to [PASA Lab of Nanjing University](http://pasa-bigdata.nju.edu.cn/) for providing metadata

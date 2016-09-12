@@ -5,7 +5,7 @@ using namespace std;
 int main()
 {
     ifstream infile("brief", ios::in);
-    ofstream outfile("dirinfo", ios::out);
+    ofstream outfile("dirmeta", ios::out);
 
     while(!infile.eof()){
 	string line;
@@ -18,7 +18,7 @@ int main()
 	if(!term.compare("d")){
 	    newline >> term;
 	    newline >> term;
-	    outfile << term << '\n';
+	    outfile << "mkdir "<< term << '\n';
 	}
     }
 }

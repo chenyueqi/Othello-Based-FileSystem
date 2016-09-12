@@ -32,7 +32,7 @@ class Central
 
     public:
 	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(0), oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)){
-	    idPool[0] = 0x80000000;
+	    idPool[0] = 0x8000000000000000;
 	    for(int i = 1 ; i < 512; i++)
 		idPool[i] = 0;
 	}
@@ -48,14 +48,19 @@ uint64_t Central::getId()
 {
     uint64_t id = 0;
     int i = 0;
-    for( ; i < 512 && idPool[i] == 0xffffffff; i++)
+    for( ; i < 512 && idPool[i] == 0xffffffffffffffff; i++)
 	id += 64;
-    uint64_t temp = idPool[i] ^ 0xffffffff;
-    while(temp != 0){
-	temp = temp << 1;
-	id++;
+    uint64_t temp = idPool[i];
+
+    int j = 0;
+    for(; j < 64; j++){
+	if(((temp<<j))>>63 == 0)
+	    break;
     }
-    idPool[i] ^= temp;
+
+    id += j;
+
+    idPool[i] |= (0x8000000000000000>>j);
     return id;
 }
 

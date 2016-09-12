@@ -28,7 +28,7 @@ class Client
 bool Client::testDirID()
 {
     for(map<string, uint64_t>::iterator iter = directoryId.begin(); iter != directoryId.end(); iter++)
-	fprintf(stderr, "%s %u\n", iter->first.c_str(), iter->second);
+	fprintf(stdout, "%s %u\n", iter->first.c_str(), iter->second);
 }
 
 bool Client::getDirId(string name, uint64_t &id)

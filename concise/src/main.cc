@@ -29,18 +29,20 @@ int main(int argc, char* argv[])
     ifstream file(argv[1], ios::in);
     string message;
     serverArr[0].testDirFile();
-    fprintf(stderr, "\n");
+    fprintf(stdout, "\n");
 
 
     while(!file.eof()){
 	getline(file, message);
 	if(!message.compare(""))
 	    continue;
-	fprintf(stderr, "\n");
-	fprintf(stderr, "%s\n", message.c_str());
+	fprintf(stdout, "\n");
+	fprintf(stdout, "%s\n", message.c_str());
 	client.sendMessage(message);
 	serverArr[0].testDirFile();
-	fprintf(stderr, "\n");
+	fprintf(stdout, "\n");
+	client.testDirID();
+	fprintf(stdout, "\n");
     }
     
    /* 
