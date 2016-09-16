@@ -14,35 +14,35 @@ class Gateway
 	vector<Server>* serverArr;
 
 	//file related message
-	bool touchMessage(const string path, const uint64_t id);
-	bool writeMessage(const string path, const uint64_t id, const uint64_t size);
-	bool readMessage(const string path, const uint64_t id);
-	bool rmMessage(const string path, const uint64_t id);
-	bool mvMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2);
+	bool touchMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool writeMessage(const string path, const uint64_t id, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool readMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool rmMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool mvMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
 	
 	//directory related message
-	bool lsMessage(const string path, const uint64_t id);
-	bool rmrMessage(const string path, const uint64_t id1, const uint64_t id2, vector<string> &olddir);
-	bool cpMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2);
+	bool lsMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool rmrMessage(const string path, const uint64_t id1, const uint64_t id2, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool cpMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
 
 	//TODO Othello
 	
     public:
 	Gateway(Central* c = NULL, vector<Server>* server = NULL): central(c), serverArr(server){}
 	bool setting(Central* p1, vector<Server>* p2){central = p1; serverArr = p2;}
-	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir);
-	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir);
+	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
 
 	//TODO update othello and idBitMap
 	bool getUpdate();
 };
 
-bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir)
+bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     if(!op.compare("ls") || !op.compare("write") || !op.compare("read") || !op.compare("rm") || !op.compare("rmr") || !op.compare("cp") || !op.compare("touch") || !op.compare("mv"))
-	return sendMessageToServer(op, path1, path2, id1, id2, newdir, olddir);
+	return sendMessageToServer(op, path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     else if(!op.compare("mkdir") || !op.compare("mvr"))
-	return central->getMessage(op, path1, path2, id1, id2, newdir, olddir);
+	return central->getMessage(op, path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     else
 	return false;
 }
@@ -51,35 +51,35 @@ bool Gateway::getMessage(const string op, const string path1, const string path2
  * touch, write, read, remove, cp, move for file and recursive remove 
  * has nothing to do with metadata in othello
  */
-bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir)
+bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     if(!op.compare("touch"))
-	touchMessage(path1, id1);
+	touchMessage(path1, id1, serverAcceCnt, dcAcceCnt, otherTime);
 
     //id2 means size in write operation
     else if(!op.compare("write")) 
-	writeMessage(path1 , id1, id2);
+	writeMessage(path1 , id1, id2, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("read")) 
-	readMessage(path1, id1);
+	readMessage(path1, id1, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("rm")) 
-	rmMessage(path1, id1);
+	rmMessage(path1, id1, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("ls")) 
-	lsMessage(path1, id1);
+	lsMessage(path1, id1, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("rmr")) 
-	rmrMessage(path1, id1, id2, olddir);
+	rmrMessage(path1, id1, id2, olddir, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("cp")) 
-	cpMessage(path1, path2, id1, id2);
+	cpMessage(path1, path2, id1, id2, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("mv")) 
-	mvMessage(path1, path2, id1, id2);
+	mvMessage(path1, path2, id1, id2, serverAcceCnt, dcAcceCnt, otherTime);
 }
 
-bool Gateway::touchMessage(const string path, const uint64_t id)
+bool Gateway::touchMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
     //get faName's serverNum from othello using id
@@ -88,13 +88,11 @@ bool Gateway::touchMessage(const string path, const uint64_t id)
     pathStack.push(path);
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
 
     return serverArr->at(serverNum).getMessage("touch file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
-bool Gateway::writeMessage(const string path, const uint64_t id, const uint64_t size)
+bool Gateway::writeMessage(const string path, const uint64_t id, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
     //get faName's serverNum from othello using id
@@ -103,14 +101,11 @@ bool Gateway::writeMessage(const string path, const uint64_t id, const uint64_t 
     pathStack.push(path);
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
-
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
 
     return serverArr->at(serverNum).getMessage("write file", pathStack, "", "", useless0, false, 0, useless1, size, serverAcceCnt, dcAcceCnt);
 }
 
-bool Gateway::readMessage(const string path, const uint64_t id)
+bool Gateway::readMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
     //get faName's serverNum from othello using id
@@ -119,14 +114,11 @@ bool Gateway::readMessage(const string path, const uint64_t id)
     pathStack.push(path);
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
-
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
 
     return serverArr->at(serverNum).getMessage("read file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
-bool Gateway::rmMessage(const string path, const uint64_t id)
+bool Gateway::rmMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
     //get faName's serverNum from othello using id
@@ -136,13 +128,10 @@ bool Gateway::rmMessage(const string path, const uint64_t id)
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
 
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
-
     return serverArr->at(serverNum).getMessage("delete file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
-bool Gateway::lsMessage(const string path, const uint64_t id)
+bool Gateway::lsMessage(const string path, const uint64_t id, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
     //get path's serverNum from othello using id 
@@ -152,13 +141,10 @@ bool Gateway::lsMessage(const string path, const uint64_t id)
     map<string, uint16_t> useless0;
     vector<FileBlock> useless1;
 
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
-
     return serverArr->at(serverNum).getMessage("list directory", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 }
 
-bool Gateway::mvMessage(const string path1, const string path2, const uint64_t id1 , const uint64_t id2)
+bool Gateway::mvMessage(const string path1, const string path2, const uint64_t id1 , const uint64_t id2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum0 = 0;
     uint16_t serverNum1 = 0;
@@ -171,8 +157,6 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint64_t i
     pathStack.push(path1);
     map<string, uint16_t> resultMap;
     vector<FileBlock> info;
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
     bool r1= serverArr->at(serverNum0).getMessage("move file", pathStack, "", "", resultMap, false, 0, info, 0, serverAcceCnt, dcAcceCnt);
 
     if(!r1){
@@ -197,7 +181,7 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint64_t i
     //build replications
 }
 
-bool Gateway::rmrMessage(const string path, const uint64_t id1, const uint64_t id2, vector<string> &olddir)
+bool Gateway::rmrMessage(const string path, const uint64_t id1, const uint64_t id2, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     //TODO
     //get faName's serverNum from othello using id1
@@ -210,9 +194,6 @@ bool Gateway::rmrMessage(const string path, const uint64_t id1, const uint64_t i
     map<string, uint16_t> delResult;
     vector<FileBlock> useless1;
 
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
-
     serverArr->at(serverNum1).getMessage("move directory", pathStack, "", "", delResult, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
 
     serverArr->at(serverNum2).getMessage("delete directory", pathStack, "", "", delResult, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
@@ -223,7 +204,7 @@ bool Gateway::rmrMessage(const string path, const uint64_t id1, const uint64_t i
     //FIXME deleted directory's id should be recycled
 }
 
-bool Gateway::cpMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2)
+bool Gateway::cpMessage(const string path1, const string path2, const uint64_t id1, const uint64_t id2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     //TODO
     //get the serverNum of path1's father from othello using id1
@@ -234,9 +215,6 @@ bool Gateway::cpMessage(const string path1, const string path2, const uint64_t i
     pathStack.push(path1);
     map<string, uint16_t> useless;
     vector<FileBlock> info;
-
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
 
     serverArr->at(serverNum1).getMessage("copy file", pathStack, "", "", useless, false, 0, info, 0, serverAcceCnt, dcAcceCnt);
 

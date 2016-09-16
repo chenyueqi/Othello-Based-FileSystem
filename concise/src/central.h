@@ -9,8 +9,8 @@
 #include<map>
 #include"server.h"
 #include"./Othello/othello.h"
+//#include"./OldOthello/othelloV7.h"
 using namespace std;
-
 
 class Central
 {
@@ -19,16 +19,17 @@ class Central
 	uint16_t prevalue;
 	vector<Server>* serverArr;
 	Gateway* gateway;
+	//XXX othello version
 	Othello<uint64_t> oth;
 	// support up to 512 * 64 = 32,768 different directory at the same time
 	uint64_t idPool[512]; 
 	uint64_t getId();
 	
     private:
-	bool mkdirProcess(const string dirName, const uint64_t id, map<string, uint64_t> &newdir);
-	bool mvrProcess(const string path1, const string path2, const  uint64_t id1, const uint64_t id2,  map<string, uint64_t> &newdir, vector<string> &olddir);
-	bool updateToGateway();
+	bool mkdirProcess(const string dirName, const uint64_t id, map<string, uint64_t> &newdir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool mvrProcess(const string path1, const string path2, const  uint64_t id1, const uint64_t id2,  map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
 	bool isPathExist(const string path, const uint16_t serverNum, map<string, uint16_t> &candidate, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
+	bool updateToGateway();
 
     public:
 	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(0), oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)){
@@ -37,8 +38,15 @@ class Central
 		idPool[i] = 0;
 	}
 
+	/* XXX othello version
+	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(0), oth(&prekey, &prevalue, 1){
+	    idPool[0] = 0x8000000000000000;
+	    for(int i = 1 ; i < 512; i++)
+		idPool[i] = 0;
+	}*/
+
 	bool setting(vector<Server>* s, Gateway* g){serverArr = s; gateway = g;}
-	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir);
+	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
 	bool testOthello();
 	//TODO update othello and idBitMap to all friends and 
 	bool updateGateway();
@@ -68,17 +76,19 @@ bool Central::testOthello()
 {
     uint16_t key = 0;
     fprintf(stderr, "%u %s %d\n", oth.queryInt(key), __FILE__, __LINE__);
+    //XXX othello version
+//    fprintf(stderr, "%u %s %d\n", oth.query(key), __FILE__, __LINE__);
 }
 
 /*
  * support mkdir, recursive mv for directory
  */
-bool Central::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir)
+bool Central::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     if(!op.compare("mkdir"))
-	return mkdirProcess(path1, id1, newdir);
+	return mkdirProcess(path1, id1, newdir, serverAcceCnt, dcAcceCnt, otherTime);
     else if(!op.compare("mvr"))
-	return mvrProcess(path1, path2, id1, id2, newdir, olddir);
+	return mvrProcess(path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     else
 	return false;
 }
@@ -92,13 +102,11 @@ bool Central::isPathExist(const string path, const uint16_t serverNum, map<strin
     return serverArr->at(serverNum).getMessage("exist directory", pathStack, "", "", candidate, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
 }
 
-bool Central::mkdirProcess(const string dirName, const uint64_t id,  map<string, uint64_t> &newdir)
+bool Central::mkdirProcess(const string dirName, const uint64_t id,  map<string, uint64_t> &newdir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     //TODO get serverNum of dirName from othello using id
+    //XXX othello version
     uint16_t serverNum = 0;
-
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
 
     map<string, uint16_t> candidate;
 
@@ -112,15 +120,29 @@ bool Central::mkdirProcess(const string dirName, const uint64_t id,  map<string,
     vector<FileBlock> useless;
     serverArr->at(serverNum).getMessage("make directory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
 
-    for(map<string, uint16_t>::iterator iter = resultMap.begin(); iter != resultMap.end(); iter++)
-	newdir.insert(pair<string , uint64_t>(iter->first, getId()));
+    uint64_t newkey[20];
+    uint16_t newvalue[20];
+    int i = 0;
+    
+    //TODO
+    for(map<string, uint16_t>::iterator iter = resultMap.begin(); iter != resultMap.end(); iter++){
+	uint64_t id = getId();
+	newdir.insert(pair<string , uint64_t>(iter->first, id));
+	newkey[i] = id;
+	newvalue[i] = iter->second;
+	i++;
+    }
+
+    //XXX othello version
+//    oth.batchupdateOrInsert(newkey, newvalue, i, false);
+
 
 // TODO  for each result, change othelo,  build replication
 
     return true;
 }
 
-bool Central::mvrProcess(const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir)
+bool Central::mvrProcess(const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum0 = 0;
     uint16_t serverNum1 = 0;
@@ -135,8 +157,7 @@ bool Central::mvrProcess(const string path1, const string path2, const uint64_t 
     pathStack.push(path1);
     map<string, uint16_t> resultMap;
     vector<FileBlock> useless;
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
+
     bool r1 = serverArr->at(serverNum0).getMessage("move directory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
 
     if(!r1){

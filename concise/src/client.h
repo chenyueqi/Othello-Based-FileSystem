@@ -66,6 +66,10 @@ bool Client::getFaId(string name, uint64_t &id)
  */
 bool Client::sendMessage(string message)
 {
+    uint16_t serverAcceCnt = 0;
+    uint8_t dcAcceCnt = 0;
+    uint64_t otherTime = 0;
+    
     stringstream me(message);
     string op;
     getline(me, op, ' ');
@@ -78,7 +82,7 @@ bool Client::sendMessage(string message)
 	getline(me, path, ' ');
 	uint64_t id;
 	getFaId(path, id);
-	gateWay->getMessage(op, path, "", id, 0, newdir, olddir);
+	gateWay->getMessage(op, path, "", id, 0, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else if(!op.compare("write")){
@@ -88,7 +92,7 @@ bool Client::sendMessage(string message)
 	getFaId(path, id);
 	uint64_t size = 0;
 	me>>size;
-	gateWay->getMessage(op, path, "", id, size, newdir, olddir);
+	gateWay->getMessage(op, path, "", id, size, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else if(!op.compare("rmr")){
@@ -97,7 +101,7 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getDirId(path, id1);
 	getFaId(path, id2);
-	gateWay->getMessage(op, path, "", id1, id2, newdir, olddir);
+	gateWay->getMessage(op, path, "", id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else if(!op.compare("ls")){
@@ -105,7 +109,7 @@ bool Client::sendMessage(string message)
 	getline(me, path, ' ');
 	uint64_t id;
 	getDirId(path, id);
-	gateWay->getMessage(op, path, "", id, 0, newdir, olddir);
+	gateWay->getMessage(op, path, "", id, 0, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else if(!op.compare("mv")){
@@ -115,7 +119,7 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getFaId(path1, id1);
 	getDirId(path2, id2);
-	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir);
+	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else if(!op.compare("mvr")){
@@ -125,7 +129,7 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getDirId(path1, id1);
 	getDirId(path2, id2);
-	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir);
+	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else if(!op.compare("cp")){
@@ -135,7 +139,7 @@ bool Client::sendMessage(string message)
 	uint64_t id1, id2;
 	getFaId(path1, id1);
 	getFaId(path2, id2);
-	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir);
+	gateWay->getMessage(op, path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
     }
 
     else{
@@ -150,6 +154,8 @@ bool Client::sendMessage(string message)
 
     for(map<string, uint64_t>::iterator iter = newdir.begin(); iter != newdir.end(); iter++)
 	directoryId.insert(pair<string, uint64_t>(iter->first, iter->second));
+
+    //TODO get statistics result
     return true;
 };
 

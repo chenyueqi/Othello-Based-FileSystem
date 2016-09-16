@@ -249,7 +249,7 @@ bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t pre
     string faName = dirName.substr(0, i);
     map<string, DirFile>::iterator iter0 = dirFileMap.find(faName);
     if(iter0 == dirFileMap.end()){
-	fprintf(stderr, "BUG %s %s %d\n", dirName.c_str(),  __FILE__ , __LINE__);
+	fprintf(stdout, "BUG %s does not exist %s %d\n", faName.c_str(), __FILE__ , __LINE__);
 	return false;
     }
     // go through directory file chain to check dirName has been existed
@@ -308,7 +308,7 @@ bool Server::mkDir(const string dirName, const bool dirExist, const uint16_t pre
 	return true;
     }
     else{
-	fprintf(stderr, "directory file entry exist %s %d\n", __FILE__, __LINE__);
+	fprintf(stdout, "directory file entry %s exist %s %d\n", dirName.c_str(), __FILE__, __LINE__);
 	return true;
     }
     return false;
@@ -926,12 +926,11 @@ bool Server::getMessage(const string op, stack<string> pathStack, const string o
 
     //from another server
     else if(!op.compare("store directory file"))
-	storeDirFile(pathStack.top());
+	return storeDirFile(pathStack.top());
 
-    else{
+    else
 	fprintf(stderr, "INVALID OPeration %s %d\n", __FILE__, __LINE__);
-
-    }
+    return false;
 }
 
 #endif
