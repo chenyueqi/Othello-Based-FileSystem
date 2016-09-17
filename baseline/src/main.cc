@@ -3,6 +3,7 @@
 #include"gateway.h"
 #include"server.h"
 #include"common.h"
+#include<fstream>
 using namespace std;
 
 vector<Server> serverArr;
@@ -41,22 +42,17 @@ int main(int argc, char* argv[])
     vector<FileBlock> info;
     serverArr[0].getMessage("store directory file", st, "", "", resultMap , false, 0, info, 0, serverAcceCnt, dcAcceCnt);
 
+*/
     ifstream file(argv[1], ios::in);
     string message;
-    serverArr[0].testDirFile();
     fprintf(stdout, "\n");
-*/
 
     while(!file.eof()){
 	getline(file, message);
 	if(!message.compare(""))
 	    continue;
-	fprintf(stdout, "\n");
 	fprintf(stdout, "%s\n", message.c_str());
 	client.sendMessage(message);
-	serverArr[0].testDirFile();
-	fprintf(stdout, "\n");
-	client.testDirID();
 	fprintf(stdout, "\n");
     }
 }
