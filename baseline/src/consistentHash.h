@@ -10,14 +10,30 @@
 #include <boost/format.hpp>
 #include <boost/crc.hpp>
 
+struct vnode_t{
+    std::size_t node_id;
+    std::size_t vnode_id;
+
+    vnode_t(std::size_t n, std::size_t v):node_id(n), vnode_id(v) {}
+
+    std::string to_str() const{
+	return boost::str(boost::format("%1%-%2%") % node_id % vnode_id);
+    }
+
+};
+
 struct crc32_hasher
 {
-    uint32_t operator()(const std::string& node){
+    typedef uint32_t result_type;
+
+    uint32_t operator()(const vnode_t& node){
 	boost::crc_32_type ret;
-	ret.process_bytes(node.c_str(), node.size());
+	std::string vnode = node.to_str();
+	ret.process_bytes(vnode.c_str(), vnode.size());
 	return ret.checksum();
     }
 };
+
 
 template <typename T, typename Hash, typename Alloc = std::allocator<std::pair<const typename Hash::result_type,T > > >
 class consistent_hash_map
