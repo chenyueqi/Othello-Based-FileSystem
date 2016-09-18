@@ -106,8 +106,8 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 bool Gateway::touchMessage(const string path,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
-    //get faName's serverNum from othello using id
-    //TODO
+    getServerNum(path, serverNum);
+
     stack<string> pathStack;
     pathStack.push(path);
     map<string, uint16_t> useless0;
@@ -119,8 +119,8 @@ bool Gateway::touchMessage(const string path,  uint16_t &serverAcceCnt, uint8_t 
 bool Gateway::writeMessage(const string path, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
-    //get faName's serverNum from othello using id
-    //TODO
+    getServerNum(path, serverNum);
+
     stack<string> pathStack;
     pathStack.push(path);
     map<string, uint16_t> useless0;
@@ -132,8 +132,8 @@ bool Gateway::writeMessage(const string path, const uint64_t size, uint16_t &ser
 bool Gateway::readMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
-    //get faName's serverNum from othello using id
-    //TODO
+    getServerNum(path, serverNum);
+
     stack<string> pathStack;
     pathStack.push(path);
     map<string, uint16_t> useless0;
@@ -145,8 +145,8 @@ bool Gateway::readMessage(const string path, uint16_t &serverAcceCnt, uint8_t &d
 bool Gateway::rmMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
-    //get faName's serverNum from othello using id
-    //TODO
+    getServerNum(path, serverNum);
+
     stack<string> pathStack;
     pathStack.push(path);
     map<string, uint16_t> useless0;
@@ -158,8 +158,8 @@ bool Gateway::rmMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcA
 bool Gateway::lsMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     uint16_t serverNum = 0;
-    //get path's serverNum from othello using id 
-    //TODO
+    getServerNum(path, serverNum);
+
     stack<string> pathStack;
     pathStack.push(path);
     map<string, uint16_t> useless0;
@@ -172,10 +172,9 @@ bool Gateway::mvMessage(const string path1, const string path2, uint16_t &server
 {
     uint16_t serverNum0 = 0;
     uint16_t serverNum1 = 0;
-    //TODO
-    //path0 =  path1's father
-    //serverNum0 = get path0 from othello using id1
-    //serverNum1 = get path2 from othello using id2
+    getServerNum(path1, serverNum0);
+    getServerNum(path2, serverNum1);
+
 
     stack<string> pathStack;
     pathStack.push(path1);
