@@ -8,7 +8,7 @@ typedef unsigned long uint64_t;
 
 const uint64_t defaultCapacity 	= 1000000; 	//1000000 B
 const uint64_t fileBlockSize	= 10000; 	//10000 B
-const uint64_t dirFileEntrySize = 100; 		//100 B
+const uint64_t objEntrySize = 100; 		//100 B
 
 const uint16_t totalServer = 128 * 4;
 const uint8_t dcBit = 0x2;

@@ -105,148 +105,102 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 
 bool Gateway::touchMessage(const string path,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum = 0;
-    getServerNum(path, serverNum);
+    string path1 = "0" + path;
+    string path2 = "1" + path;
+    string path3 = "2" + path;
 
-    stack<string> pathStack;
-    pathStack.push(path);
-    map<string, uint16_t> useless0;
-    vector<FileBlock> useless1;
+    uint16_t serverNum1, serverNum2, serverNum3;
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
 
-    return serverArr->at(serverNum).getMessage("touch file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+    map<string, objInfo> result;
+    serverArr->at(serverNum1).getMessage("touch file", path, 0, result);
+    serverArr->at(serverNum2).getMessage("touch file", path, 0, result);
+    serverArr->at(serverNum3).getMessage("touch file", path, 0, result);
 }
 
 bool Gateway::writeMessage(const string path, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum = 0;
-    getServerNum(path, serverNum);
+    string path1 = "0" + path;
+    string path2 = "1" + path;
+    string path3 = "2" + path;
 
-    stack<string> pathStack;
-    pathStack.push(path);
-    map<string, uint16_t> useless0;
-    vector<FileBlock> useless1;
+    uint16_t serverNum1, serverNum2, serverNum3;
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
 
-    return serverArr->at(serverNum).getMessage("write file", pathStack, "", "", useless0, false, 0, useless1, size, serverAcceCnt, dcAcceCnt);
+    map<string, objInfo> result;
+    serverArr->at(serverNum1).getMessage("write file", path, size, result);
+    serverArr->at(serverNum2).getMessage("write file", path, size, result);
+    serverArr->at(serverNum3).getMessage("write file", path, size, result);
 }
 
 bool Gateway::readMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum = 0;
-    getServerNum(path, serverNum);
+    string path1 = "0" + path;
+    string path2 = "1" + path;
+    string path3 = "2" + path;
 
-    stack<string> pathStack;
-    pathStack.push(path);
-    map<string, uint16_t> useless0;
-    vector<FileBlock> useless1;
+    uint16_t serverNum1, serverNum2, serverNum3;
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
 
-    return serverArr->at(serverNum).getMessage("read file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+    map<string, objInfo> result1;
+    map<string, objInfo> result2;
+    map<string, objInfo> result3;
+
+    serverArr->at(serverNum1).getMessage("read file", path, 0, result1);
+    serverArr->at(serverNum2).getMessage("read file", path, 0, result2);
+    serverArr->at(serverNum3).getMessage("read file", path, 0, result3);
 }
 
 bool Gateway::rmMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum = 0;
-    getServerNum(path, serverNum);
+    string path1 = "0" + path;
+    string path2 = "1" + path;
+    string path3 = "2" + path;
 
-    stack<string> pathStack;
-    pathStack.push(path);
-    map<string, uint16_t> useless0;
-    vector<FileBlock> useless1;
+    uint16_t serverNum1, serverNum2, serverNum3;
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
 
-    return serverArr->at(serverNum).getMessage("delete file", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+    map<string, objInfo> result;
+    serverArr->at(serverNum1).getMessage("delete file", path, 0, result);
+    serverArr->at(serverNum2).getMessage("delete file", path, 0, result);
+    serverArr->at(serverNum3).getMessage("delete file", path, 0, result);
 }
 
 bool Gateway::lsMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum = 0;
-    getServerNum(path, serverNum);
+    string path1 = "0" + path;
+    string path2 = "1" + path;
+    string path3 = "2" + path;
 
-    stack<string> pathStack;
-    pathStack.push(path);
-    map<string, uint16_t> useless0;
-    vector<FileBlock> useless1;
+    uint16_t serverNum1, serverNum2, serverNum3;
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
 
-    return serverArr->at(serverNum).getMessage("list directory", pathStack, "", "", useless0, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
+    map<string, objInfo> result;
+    serverArr->at(serverNum1).getMessage("list directory", path, 0, result);
+//    serverArr->at(serverNum2).getMessage("delete file", path2, size, result);
+//    serverArr->at(serverNum3).getMessage("delete file", path3, size, result3);
 }
 
 bool Gateway::mvMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum0 = 0;
-    uint16_t serverNum1 = 0;
-    getServerNum(path1, serverNum0);
-    getServerNum(path2, serverNum1);
-
-
-    stack<string> pathStack;
-    pathStack.push(path1);
-    map<string, uint16_t> resultMap;
-    vector<FileBlock> info;
-    bool r1= serverArr->at(serverNum0).getMessage("move file", pathStack, "", "", resultMap, false, 0, info, 0, serverAcceCnt, dcAcceCnt);
-
-    if(!r1){
-	fprintf(stderr, "file %s does not exist %s %d\n", path1.c_str(), __FILE__, __LINE__);
-	return false;
-    }
-
-    pathStack.pop();
-
-    int i = 0;
-    for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
-    string temp = path1.substr(0, i);
-    string suffix = path1.substr(temp.length(), path1.length());
-    string newName = path2 + suffix;
-
-    pathStack.push(newName);
-
-    serverArr->at(serverNum1).getMessage("touch file", pathStack, "", "", resultMap, true, 0, info, 0, serverAcceCnt, dcAcceCnt);
-
-    return true;
-    //TODO
-    //build replications
 }
 
 bool Gateway::rmrMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    //TODO
-    //get faName's serverNum from othello using id1
-    //get path's severNum from othello using id2
-    uint16_t serverNum1 = 0;
-    uint16_t serverNum2 = 0;
-
-    stack<string> pathStack;
-    pathStack.push(path);
-    map<string, uint16_t> delResult;
-    vector<FileBlock> useless1;
-
-    serverArr->at(serverNum1).getMessage("move directory", pathStack, "", "", delResult, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
-
-    serverArr->at(serverNum2).getMessage("delete directory", pathStack, "", "", delResult, false, 0, useless1, 0, serverAcceCnt, dcAcceCnt);
-    
-    for(map<string, uint16_t>::iterator iter = delResult.begin(); iter != delResult.end(); iter++);
-
-    //FIXME deleted directory's id should be recycled
 }
 
 bool Gateway::cpMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    //TODO
-    //get the serverNum of path1's father from othello using id1
-    //get the serverNum of path2's father from othello using id2
-    uint16_t serverNum1 = 0;
-    uint16_t serverNum2 = 0;
-    stack<string> pathStack;
-    pathStack.push(path1);
-    map<string, uint16_t> useless;
-    vector<FileBlock> info;
-
-    serverArr->at(serverNum1).getMessage("copy file", pathStack, "", "", useless, false, 0, info, 0, serverAcceCnt, dcAcceCnt);
-
-    uint64_t size = 0;
-    for(vector<FileBlock>::iterator iter = info.begin(); iter != info.end(); iter++)
-	size += (fileBlockSize - iter->restCapacity);
-
-    pathStack.pop();
-    pathStack.push(path2);
-    serverArr->at(serverNum2).getMessage("write file", pathStack, "", "", useless, false, 0, info, size, serverAcceCnt, dcAcceCnt);
 }
 
 bool Gateway::mvrMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
@@ -255,10 +209,6 @@ bool Gateway::mvrMessage(const string path1, const string path2, uint16_t &serve
 
 bool Gateway::mkdirMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-    uint16_t serverNum = 0;
-    getServerNum(path, serverNum);
-    fprintf(stdout, "%u %s %d\n", serverNum, __FILE__ , __LINE__);
-    return true;
 }
 
 #endif

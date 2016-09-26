@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 bool init()
 {
     for(int i = 0 ; i < totalServer ; i++){
-	Server s(i, defaultCapacity, &serverArr);
+	Server s(i, defaultCapacity);
 	serverArr.push_back(s);
     }
     //init gateway
