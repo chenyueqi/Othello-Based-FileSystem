@@ -19,7 +19,6 @@ struct vnode_t{
     std::string to_str() const{
 	return boost::str(boost::format("%1%-%2%") % node_id % vnode_id);
     }
-
 };
 
 struct crc32_hasher

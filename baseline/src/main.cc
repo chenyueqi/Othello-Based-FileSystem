@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 */
     ifstream file(argv[1], ios::in);
     string message;
-    fprintf(stdout, "\n");
+    fprintf(stderr, "\n");
 
     while(!file.eof()){
 	getline(file, message);

@@ -81,7 +81,7 @@ void Server::testObj()
 	if(iter->second.dirOrFile == true)
 	    fprintf(stdout, "  directory\n");
 	else 
-	    fprintf(stdout, "  file %u\n", iter->second.size);
+	    fprintf(stdout, "  file %lu\n", iter->second.size);
     }
 }
 
@@ -97,6 +97,11 @@ bool Server::lsDir(const string path)
 
 bool Server::mkDir(const string path)
 {
+    if(objMap.find(path) != objMap.end()){
+	fprintf(stdout, "directory already exist\n");
+	return false;
+    }
+
     if(availCapacity < objEntrySize){
 	fprintf(stderr, "server capacity isn't enough %s %d\n", __FILE__, __LINE__);
 	return false;
@@ -206,7 +211,9 @@ bool Server::delFile(const string path)
 	freeStorage(iter->second.size);
 	freeStorage(objEntrySize);
 	objMap.erase(iter);
+	return true;
     }
+    return false;
 }
 
 bool Server::mvFile(const string path, map<string, objInfo> &result)
@@ -256,7 +263,7 @@ bool Server::getMessage(const string op, const string path, const uint64_t size,
 	return delDir(path);
     
     else if(!op.compare("make directory"))
-	    mkDir(path);
+	return mkDir(path);
 
     else if(!op.compare("move directory"))
 	return mvDir(path, result);

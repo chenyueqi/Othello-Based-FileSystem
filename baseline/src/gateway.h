@@ -62,7 +62,7 @@ bool Gateway::testConsHash()
 
 bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
-	return sendMessageToServer(op, path1, path2, size, serverAcceCnt, dcAcceCnt, otherTime);
+    return sendMessageToServer(op, path1, path2, size, serverAcceCnt, dcAcceCnt, otherTime);
 }
 
 /*
@@ -72,7 +72,7 @@ bool Gateway::getMessage(const string op, const string path1, const string path2
 bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
     if(!op.compare("touch"))
-	touchMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	return touchMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
 
     //id2 means size in write operation
     else if(!op.compare("write")) 
@@ -100,7 +100,7 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 	mvrMessage(path1, path2, serverAcceCnt, dcAcceCnt, otherTime);
 
     else if(!op.compare("mkdir")) 
-	mkdirMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	return mkdirMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
 }
 
 bool Gateway::touchMessage(const string path,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
@@ -193,6 +193,47 @@ bool Gateway::lsMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcA
 
 bool Gateway::mvMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
+    string path11 = "0" + path1;
+    string path12 = "1" + path1;
+    string path13 = "2" + path1;
+
+    uint16_t serverNum11, serverNum12, serverNum13;
+    getServerNum(path11, serverNum11);
+    getServerNum(path12, serverNum12);
+    getServerNum(path13, serverNum13);
+    
+    map<string, objInfo> result1;
+    map<string, objInfo> result2;
+    map<string, objInfo> result3;
+
+    uint64_t fileSize = 0;
+
+    if(serverArr->at(serverNum11).getMessage("move file", path1, 0, result1))
+	fileSize = result1.begin()->second.size;
+    if(serverArr->at(serverNum12).getMessage("move file", path1, 0, result2))
+	fileSize = result2.begin()->second.size;
+    if(serverArr->at(serverNum13).getMessage("move file", path1, 0, result3))
+	fileSize = result3.begin()->second.size;
+    
+
+    int i = 0;
+    for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
+    string temp = path1.substr(0, i);
+
+    string newpath = path2 + temp;
+    string path21 = "0" + newpath;
+    string path22 = "1" + newpath;
+    string path23 = "2" + newpath;
+
+    uint16_t serverNum21, serverNum22, serverNum23;
+    getServerNum(path21, serverNum21);
+    getServerNum(path22, serverNum22);
+    getServerNum(path23, serverNum23);
+
+    map<string, objInfo> result;
+    serverArr->at(serverNum21).getMessage("write file", newpath, fileSize, result);
+    serverArr->at(serverNum22).getMessage("write file", newpath, fileSize, result);
+    serverArr->at(serverNum23).getMessage("write file", newpath, fileSize, result);
 }
 
 bool Gateway::rmrMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
@@ -201,6 +242,40 @@ bool Gateway::rmrMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dc
 
 bool Gateway::cpMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
+    string path11 = "0" + path1;
+    string path12 = "1" + path1;
+    string path13 = "2" + path1;
+
+    uint16_t serverNum11, serverNum12, serverNum13;
+    getServerNum(path11, serverNum11);
+    getServerNum(path12, serverNum12);
+    getServerNum(path13, serverNum13);
+    
+    map<string, objInfo> result1;
+    map<string, objInfo> result2;
+    map<string, objInfo> result3;
+
+    uint64_t fileSize;
+    if(serverArr->at(serverNum11).getMessage("copy file", path1, 0, result1))
+	fileSize = result1.begin()->second.size;
+    if(serverArr->at(serverNum12).getMessage("copy file", path1, 0, result2))
+	fileSize = result2.begin()->second.size;
+    if(serverArr->at(serverNum13).getMessage("copy file", path1, 0, result3))
+	fileSize = result3.begin()->second.size;
+
+    string path21 = "0" + path2;
+    string path22 = "1" + path2;
+    string path23 = "2" + path2;
+
+    uint16_t serverNum21, serverNum22, serverNum23;
+    getServerNum(path21, serverNum21);
+    getServerNum(path22, serverNum22);
+    getServerNum(path23, serverNum23);
+
+    map<string, objInfo> result;
+    serverArr->at(serverNum21).getMessage("write file", path2, fileSize, result);
+    serverArr->at(serverNum22).getMessage("write file", path2, fileSize, result);
+    serverArr->at(serverNum23).getMessage("write file", path2, fileSize, result);
 }
 
 bool Gateway::mvrMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
@@ -209,6 +284,20 @@ bool Gateway::mvrMessage(const string path1, const string path2, uint16_t &serve
 
 bool Gateway::mkdirMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
 {
+    string path1 = "0" + path;
+    string path2 = "1" + path;
+    string path3 = "2" + path;
+
+    uint16_t serverNum1, serverNum2, serverNum3;
+    map<string, objInfo> result;
+
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
+
+    serverArr->at(serverNum1).getMessage("make directory", path, 0, result);
+    serverArr->at(serverNum2).getMessage("make directory", path, 0, result);
+    serverArr->at(serverNum3).getMessage("make directory", path, 0, result);
 }
 
 #endif

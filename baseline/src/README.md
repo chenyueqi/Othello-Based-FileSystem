@@ -3,6 +3,7 @@ In this directory, I try to use implement [consistant hash](http://www.cs.prince
 
 Directory File is not supported in this implement. According to orginal consistent hash, all files are considered as objects without relation. Thus, directory is also considered as an ordinary file here, but not a father of its sub file or sub direcctory. Based on this, We analyze the time complexity of distinct UNIX-like operations as follow:
 
+touch: O(1) without data transmision
 write: O(1) with data transmission  
 read: O(1) with data transmission  
 rm: O(1)  
