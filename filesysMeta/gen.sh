@@ -2,9 +2,9 @@ g++ -o filter filter.cc
 g++ -o enlarge enlarge.cc
 g++ -o mkdirFilter mkdirFilter.cc
 
-./filter
-./enlarge
-./mkdirFilter
+./filter metadata briefdata
+./enlarge briefdata enlargeddata
+./mkdirFilter enlargeddata mkdirTestcase
 
 rm briefdata
 rm enlargeddata

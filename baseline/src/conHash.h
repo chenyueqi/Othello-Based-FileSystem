@@ -21,7 +21,7 @@ struct vnode_t{
     }
 };
 
-struct crc32_hasher
+struct crc32
 {
     typedef uint32_t result_type;
 
@@ -35,7 +35,7 @@ struct crc32_hasher
 
 
 template <typename T, typename Hash, typename Alloc = std::allocator<std::pair<const typename Hash::result_type,T > > >
-class consistent_hash_map
+class Conhash
 {
     public:
 	typedef typename Hash::result_type size_type;

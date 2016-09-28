@@ -77,7 +77,7 @@ void Server::testObj()
 {
     for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap.end(); iter++)
     {
-	fprintf(stdout, "%s\n", iter->first.c_str());
+	fprintf(stdout, "%s ", iter->first.c_str());
 	if(iter->second.dirOrFile == true)
 	    fprintf(stdout, "  directory\n");
 	else 

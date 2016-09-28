@@ -1,5 +1,4 @@
 #include"client.h"
-#include"consistentHash.h"
 #include"gateway.h"
 #include"server.h"
 #include"common.h"
@@ -10,9 +9,6 @@ vector<Server> serverArr;
 
 Client client;
 Gateway gateWay;
-
-typedef consistent_hash_map<vnode_t,crc32_hasher> consistent_hash_t;
-consistent_hash_t consistent_hash_;
 
 bool init();
 

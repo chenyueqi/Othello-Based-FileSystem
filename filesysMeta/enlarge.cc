@@ -4,10 +4,10 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char* argv[])
 {
-    ifstream infile("briefdata",ios::in);
-    ofstream outfile("enlargeddata", ios::out);
+    ifstream infile(argv[1],ios::in);
+    ofstream outfile(argv[2], ios::out);
 
     while(!infile.eof()){
 	string term1, term2, term3;

@@ -2,10 +2,10 @@
 #include<sstream>
 using namespace std;
 
-int main()
+int main(int argc, char* argv[])
 {
-    ifstream infile("enlargeddata", ios::in);
-    ofstream outfile("mkdirTestcase", ios::out);
+    ifstream infile(argv[1], ios::in);
+    ofstream outfile(argv[2], ios::out);
 
     while(!infile.eof()){
 	string line;

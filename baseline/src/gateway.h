@@ -5,15 +5,15 @@
 #include<sstream>
 #include<vector>
 #include"server.h"
-#include"consistentHash.h"
+#include"conHash.h"
 using namespace std;
 
 class Gateway
 {
     private:
 	vector<Server>* serverArr;
-	typedef consistent_hash_map<vnode_t, crc32_hasher> consistent_hash_t;
-	consistent_hash_t consistent_hash_;
+	typedef Conhash<vnode_t, crc32> ConhashType;
+	ConhashType hashRing;
 
 	bool getServerNum(const string path, uint16_t &id);
 
@@ -34,7 +34,7 @@ class Gateway
     public:
 	Gateway(vector<Server>* server = NULL): serverArr(server){
 	    for(int i = 0 ; i < totalServer; i++)
-		consistent_hash_.insert(vnode_t(i,1));
+		hashRing.insert(vnode_t(i,1));
 	}
 	bool setting(vector<Server>* p2){serverArr = p2;}
 	bool getMessage(const string op, const string path1, const string path2, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
@@ -47,16 +47,16 @@ class Gateway
 bool Gateway::getServerNum(const string path, uint16_t &id)
 {
     boost::crc_32_type ret;
-    ret.process_bytes(path.c_str(), totalServer);
-    consistent_hash_t::iterator iter;
-    iter = consistent_hash_.find(ret.checksum());
+    ret.process_bytes(path.c_str(), path.size());
+    ConhashType::iterator iter;
+    iter = hashRing.find(ret.checksum());
     id = iter->second.node_id;
     return true;
 }
 
 bool Gateway::testConsHash()
 {
-    for(consistent_hash_t::iterator iter = consistent_hash_.begin(); iter != consistent_hash_.end(); iter++)
+    for(ConhashType::iterator iter = hashRing.begin(); iter != hashRing.end(); iter++)
 	fprintf(stdout, "hash value:%u server id:%u %s %d\n", iter->first, iter->second.node_id,  __FILE__ , __LINE__);
 }
 
@@ -298,6 +298,8 @@ bool Gateway::mkdirMessage(const string path, uint16_t &serverAcceCnt, uint8_t &
     serverArr->at(serverNum1).getMessage("make directory", path, 0, result);
     serverArr->at(serverNum2).getMessage("make directory", path, 0, result);
     serverArr->at(serverNum3).getMessage("make directory", path, 0, result);
+
+    return true;
 }
 
 #endif
