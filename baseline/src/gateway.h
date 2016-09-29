@@ -113,14 +113,44 @@ bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* d
     string path3 = "2" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
+    map<string, objInfo> result;
+
     getServerNum(path1, serverNum1);
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    map<string, objInfo> result;
     serverArr->at(serverNum1).getMessage("touch file", path, 0, result);
     serverArr->at(serverNum2).getMessage("touch file", path, 0, result);
     serverArr->at(serverNum3).getMessage("touch file", path, 0, result);
+
+    if(isSameDc(serverNum1, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum2, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum3, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    return true;
 }
 
 bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow* dataflowStat)
@@ -130,16 +160,52 @@ bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t
     string path3 = "2" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
+    map<string, objInfo> result;
+
     getServerNum(path1, serverNum1);
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    map<string, objInfo> result;
     serverArr->at(serverNum1).getMessage("write file", path, size, result);
     serverArr->at(serverNum2).getMessage("write file", path, size, result);
     serverArr->at(serverNum3).getMessage("write file", path, size, result);
+
+    if(isSameDc(serverNum1, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += size;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += size;
+    }
+
+    if(isSameDc(serverNum2, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += size;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += size;
+    }
+
+    if(isSameDc(serverNum3, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += size;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += size;
+    }
+    return true;
 }
 
+//FIXME
 bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "0" + path;
@@ -158,6 +224,41 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
     serverArr->at(serverNum1).getMessage("read file", path, 0, result1);
     serverArr->at(serverNum2).getMessage("read file", path, 0, result2);
     serverArr->at(serverNum3).getMessage("read file", path, 0, result3);
+
+    if(isSameDc(serverNum1, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += result1.begin()->second.size;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += result1.begin()->second.size;
+    }
+
+    if(isSameDc(serverNum2, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += result2.begin()->second.size;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += result2.begin()->second.size;
+    }
+
+    if(isSameDc(serverNum3, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += result3.begin()->second.size;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += result3.begin()->second.size;
+    }
+
+    return true;
 }
 
 bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)

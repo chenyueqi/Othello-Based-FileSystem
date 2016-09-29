@@ -56,7 +56,6 @@ bool Client::sendMessage(string message)
 	getline(me, path, ' ');
 	getDcLabel(dcLabel);
 	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
-	dataflowAna(dataflowStat);
     }
 
     else if(!op.compare("write")){
@@ -111,7 +110,7 @@ bool Client::sendMessage(string message)
 	return false;
     }
 
-
+    dataflowAna(dataflowStat);
     return true;
 };
 
