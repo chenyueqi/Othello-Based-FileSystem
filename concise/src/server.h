@@ -76,6 +76,7 @@ class Server{
 	}
 
 	bool isSameDc(uint16_t s1, uint16_t s2){
+	    //XXX
 	    return (s1 - ((s1 >> dcBit) << dcBit)) == (s2 - ((s2 >> dcBit) << dcBit));
 	}
 	

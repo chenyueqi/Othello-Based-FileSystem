@@ -10,14 +10,14 @@
 #include <boost/format.hpp>
 #include <boost/crc.hpp>
 
-struct vnode_t{
-    std::size_t node_id;
-    std::size_t vnode_id;
+struct vnode{
+    std::size_t id;
+    std::size_t vid;
 
-    vnode_t(std::size_t n, std::size_t v):node_id(n), vnode_id(v) {}
+    vnode(std::size_t n, std::size_t v):id(n), vid(v) {}
 
     std::string to_str() const{
-	return boost::str(boost::format("%1%-%2%") % node_id % vnode_id);
+	return boost::str(boost::format("%1%-%2%") % id % vid);
     }
 };
 
@@ -25,10 +25,10 @@ struct crc32
 {
     typedef uint32_t result_type;
 
-    uint32_t operator()(const vnode_t& node){
+    uint32_t operator()(const vnode& node){
 	boost::crc_32_type ret;
-	std::string vnode = node.to_str();
-	ret.process_bytes(vnode.c_str(), vnode.size());
+	std::string name = node.to_str();
+	ret.process_bytes(name.c_str(), name.size());
 	return ret.checksum();
     }
 };

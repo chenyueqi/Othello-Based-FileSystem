@@ -4,6 +4,7 @@
 #include<iostream>
 #include<sstream>
 #include<cstdio>
+#include<cstdlib>
 #include"gateway.h"
 using namespace std;
 
@@ -11,31 +12,50 @@ class Client
 {
     private:
 	Gateway* gateWay;
+	bool getDcLabel(uint8_t& dcLabel);
+	bool dataflowAna(dataflow* stat);
 
     public:
-	Client(Gateway* p = NULL):gateWay(p){}
+	Client(Gateway* p = NULL):gateWay(p){srand((unsigned)time(NULL));}
 	bool setGateWay(Gateway* p){gateWay = p;}
 	bool sendMessage(string message);
 };
 
+bool Client::getDcLabel(uint8_t& dcLabel)
+{
+    dcLabel = rand()%(1<<dcBit);
+    return true;
+}
+
+bool Client::dataflowAna(dataflow dataflowStat[2])
+{
+    fprintf(stdout, "intra: %u-%lu\t inter: %u-%lu\n", dataflowStat[0].cnt, dataflowStat[0].size, dataflowStat[1].cnt, dataflowStat[1].size);
+    return true;
+}
 /*
  * support mkdir, list, recursive remove, recursive move for directory
  * support remove, write, read, touch, move, cp for file
  */
 bool Client::sendMessage(string message)
 {
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
-    uint64_t otherTime = 0;
-    
     stringstream me(message);
     string op;
     getline(me, op, ' ');
 
+    uint8_t dcLabel = 0;
+
+    dataflow dataflowStat[2];
+    dataflowStat[0].cnt = 0;
+    dataflowStat[0].size = 0;
+    dataflowStat[1].cnt = 0;
+    dataflowStat[1].size = 0;
+
+
     if(!op.compare("mkdir") || !op.compare("rm") || !op.compare("read") || !op.compare("touch")){
-	string path;
+	string path;	
 	getline(me, path, ' ');
-	gateWay->getMessage(op, path, "", 0, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("write")){
@@ -43,40 +63,46 @@ bool Client::sendMessage(string message)
 	getline(me, path, ' ');
 	uint64_t size = 0;
 	me>>size;
-	gateWay->getMessage(op, path, "", size, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path, "", size, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("rmr")){
 	string path;
 	getline(me, path, ' ');
-	gateWay->getMessage(op, path, "", 0, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("ls")){
 	string path;
 	getline(me, path, ' ');
-	gateWay->getMessage(op, path, "", 0, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("mv")){
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
-	gateWay->getMessage(op, path1, path2, 0, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("mvr")){
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
-	gateWay->getMessage(op, path1, path2, 0, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("cp")){
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
-	gateWay->getMessage(op, path1, path2, 0, serverAcceCnt, dcAcceCnt, otherTime);
+	getDcLabel(dcLabel);
+	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
     }
 
     else{
@@ -84,7 +110,8 @@ bool Client::sendMessage(string message)
 	return false;
     }
 
-    //TODO get statistics result
+    dataflowAna(dataflowStat);
+
     return true;
 };
 

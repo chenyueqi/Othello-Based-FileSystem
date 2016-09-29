@@ -6,42 +6,45 @@
 #include<vector>
 #include"server.h"
 #include"conHash.h"
+#include"common.h"
 using namespace std;
 
 class Gateway
 {
     private:
 	vector<Server>* serverArr;
-	typedef Conhash<vnode_t, crc32> ConhashType;
+	typedef Conhash<vnode, crc32> ConhashType;
 	ConhashType hashRing;
 
 	bool getServerNum(const string path, uint16_t &id);
+	bool isSameDc(uint16_t s1, uint8_t dcLabel){
+	    return dcLabel == ( (s1-(s1>>(dcBit + 1)<<(dcBit + 1)))>>1);
+	}
 
 	//file related message
-	bool touchMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool writeMessage(const string path, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool readMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool rmMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool mvMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool touchMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool readMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool rmMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool mvMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
 	
 	//directory related message
-	bool lsMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool rmrMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool cpMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool mkdirMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool mvrMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool lsMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool rmrMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
 
     public:
 	Gateway(vector<Server>* server = NULL): serverArr(server){
 	    for(int i = 0 ; i < totalServer; i++)
-		hashRing.insert(vnode_t(i,1));
+		hashRing.insert(vnode(i,1));
 	}
 	bool setting(vector<Server>* p2){serverArr = p2;}
-	bool getMessage(const string op, const string path1, const string path2, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
+	bool getMessage(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow stat[2]);
+	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow stat[2]);
 
 	bool testConsHash();
-
 };
 
 bool Gateway::getServerNum(const string path, uint16_t &id)
@@ -50,60 +53,60 @@ bool Gateway::getServerNum(const string path, uint16_t &id)
     ret.process_bytes(path.c_str(), path.size());
     ConhashType::iterator iter;
     iter = hashRing.find(ret.checksum());
-    id = iter->second.node_id;
+    id = iter->second.id;
     return true;
 }
 
 bool Gateway::testConsHash()
 {
     for(ConhashType::iterator iter = hashRing.begin(); iter != hashRing.end(); iter++)
-	fprintf(stdout, "hash value:%u server id:%u %s %d\n", iter->first, iter->second.node_id,  __FILE__ , __LINE__);
+	fprintf(stdout, "hash value:%u server id:%u %s %d\n",(unsigned) iter->first, (unsigned)iter->second.id,  __FILE__ , __LINE__);
 }
 
-bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2])
 {
-    return sendMessageToServer(op, path1, path2, size, serverAcceCnt, dcAcceCnt, otherTime);
+    return sendMessageToServer(op, path1, path2, size, dcLabel, dataflowStat);
 }
 
 /*
  * touch, write, read, remove, cp, move for file and recursive remove 
  * has nothing to do with metadata in othello
  */
-bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2])
 {
     if(!op.compare("touch"))
-	return touchMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	return touchMessage(path1, dcLabel, dataflowStat);
 
     //id2 means size in write operation
     else if(!op.compare("write")) 
-	writeMessage(path1 , size,  serverAcceCnt, dcAcceCnt, otherTime);
+	writeMessage(path1 , size, dcLabel, dataflowStat);
 
     else if(!op.compare("read")) 
-	readMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	readMessage(path1, dcLabel, dataflowStat);
 
     else if(!op.compare("rm")) 
-	rmMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	rmMessage(path1, dcLabel, dataflowStat);
 
     else if(!op.compare("ls")) 
-	lsMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	lsMessage(path1, dcLabel, dataflowStat);
 
     else if(!op.compare("rmr")) 
-	rmrMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	rmrMessage(path1, dcLabel, dataflowStat);
 
     else if(!op.compare("cp")) 
-	cpMessage(path1, path2, serverAcceCnt, dcAcceCnt, otherTime);
+	cpMessage(path1, path2, dcLabel, dataflowStat);
 
     else if(!op.compare("mv")) 
-	mvMessage(path1, path2, serverAcceCnt, dcAcceCnt, otherTime);
+	mvMessage(path1, path2, dcLabel, dataflowStat);
 
     else if(!op.compare("mvr")) 
-	mvrMessage(path1, path2, serverAcceCnt, dcAcceCnt, otherTime);
+	mvrMessage(path1, path2, dcLabel, dataflowStat);
 
     else if(!op.compare("mkdir")) 
-	return mkdirMessage(path1, serverAcceCnt, dcAcceCnt, otherTime);
+	return mkdirMessage(path1, dcLabel, dataflowStat);
 }
 
-bool Gateway::touchMessage(const string path,  uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "0" + path;
     string path2 = "1" + path;
@@ -120,7 +123,7 @@ bool Gateway::touchMessage(const string path,  uint16_t &serverAcceCnt, uint8_t 
     serverArr->at(serverNum3).getMessage("touch file", path, 0, result);
 }
 
-bool Gateway::writeMessage(const string path, const uint64_t size, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "0" + path;
     string path2 = "1" + path;
@@ -137,7 +140,7 @@ bool Gateway::writeMessage(const string path, const uint64_t size, uint16_t &ser
     serverArr->at(serverNum3).getMessage("write file", path, size, result);
 }
 
-bool Gateway::readMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "0" + path;
     string path2 = "1" + path;
@@ -157,7 +160,7 @@ bool Gateway::readMessage(const string path, uint16_t &serverAcceCnt, uint8_t &d
     serverArr->at(serverNum3).getMessage("read file", path, 0, result3);
 }
 
-bool Gateway::rmMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "0" + path;
     string path2 = "1" + path;
@@ -174,7 +177,7 @@ bool Gateway::rmMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcA
     serverArr->at(serverNum3).getMessage("delete file", path, 0, result);
 }
 
-bool Gateway::lsMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::lsMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "0" + path;
     string path2 = "1" + path;
@@ -191,7 +194,7 @@ bool Gateway::lsMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcA
 //    serverArr->at(serverNum3).getMessage("delete file", path3, size, result3);
 }
 
-bool Gateway::mvMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path11 = "0" + path1;
     string path12 = "1" + path1;
@@ -236,11 +239,11 @@ bool Gateway::mvMessage(const string path1, const string path2, uint16_t &server
     serverArr->at(serverNum23).getMessage("write file", newpath, fileSize, result);
 }
 
-bool Gateway::rmrMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::rmrMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
 }
 
-bool Gateway::cpMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path11 = "0" + path1;
     string path12 = "1" + path1;
@@ -278,11 +281,11 @@ bool Gateway::cpMessage(const string path1, const string path2, uint16_t &server
     serverArr->at(serverNum23).getMessage("write file", path2, fileSize, result);
 }
 
-bool Gateway::mvrMessage(const string path1, const string path2, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
 }
 
-bool Gateway::mkdirMessage(const string path, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
+bool Gateway::mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2])
 {
     string path1 = "0" + path;
     string path2 = "1" + path;
@@ -298,6 +301,33 @@ bool Gateway::mkdirMessage(const string path, uint16_t &serverAcceCnt, uint8_t &
     serverArr->at(serverNum1).getMessage("make directory", path, 0, result);
     serverArr->at(serverNum2).getMessage("make directory", path, 0, result);
     serverArr->at(serverNum3).getMessage("make directory", path, 0, result);
+
+    if(isSameDc(serverNum1, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum2, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum3, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
 
     return true;
 }
