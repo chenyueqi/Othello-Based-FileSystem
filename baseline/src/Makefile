@@ -9,7 +9,7 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/mkdirTestcase
+	./main ../../testcase/touchTestcase
 
 clean: 
 	rm -rf main

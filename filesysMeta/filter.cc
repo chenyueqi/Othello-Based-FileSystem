@@ -33,4 +33,6 @@ int main(int argc, char* argv[])
 	newline >> term;
 	outfile << term << "\n";
     }
+    infile.close();
+    outfile.close();
 }

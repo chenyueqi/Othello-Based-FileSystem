@@ -21,4 +21,6 @@ int main(int argc, char* argv[])
 	    outfile << "mkdir "<< term << '\n';
 	}
     }
+    infile.close();
+    outfile.close();
 }
