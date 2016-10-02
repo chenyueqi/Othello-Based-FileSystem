@@ -20,6 +20,9 @@ int main(int argc, char* argv[])
 
 	newpath = "/1" + term3.substr(1, term3.length());
 	outfile << term1 << "\t" << term2 << "\t" << newpath <<endl;
+
+	newpath = "/2" + term3.substr(1, term3.length());
+	outfile << term1 << "\t" << term2 << "\t" << newpath <<endl;
     }
     infile.close();
     outfile.close();

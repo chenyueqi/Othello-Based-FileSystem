@@ -11,6 +11,7 @@ Client client;
 Gateway gateWay;
 
 bool init();
+bool loadBalanceAna();
 
 int main(int argc, char* argv[])
 {
@@ -32,6 +33,9 @@ int main(int argc, char* argv[])
     }
 
     fprintf(stdout, "%s\t", argv[2]);
+    string op(argv[2]);
+    if(!op.compare("write"))
+	loadBalanceAna();
 
     client.getStat();
 }
@@ -53,16 +57,25 @@ bool init()
 	}
     }
 
-    /*
-
-    for(vector<Server>::iterator iter = serverArr.begin(); iter != serverArr.end(); iter++){
-	if(iter->getState())
-	    fprintf(stdout, "%u\n", iter->getNum());
-    }
-    */
-
     //init gateway
     gateWay.setting(&serverArr);
     //init client
     client.setGateWay(&gateWay);
+}
+
+bool loadBalanceAna()
+{
+    uint64_t max = 0;
+    uint64_t min = defaultCapacity;
+    for(vector<Server>::iterator iter = serverArr.begin(); iter != serverArr.end(); iter++)
+    {
+	if(iter->getState()){
+	    if(iter->getUsedCapacity() > max)
+		max = iter->getUsedCapacity();
+	    if(iter->getUsedCapacity() < min)
+		min = iter->getUsedCapacity();
+	    fprintf(stdout, "server number: %u, used storage: %lu\n", iter->getNum(), iter->getUsedCapacity());
+	}
+    }
+    fprintf(stdout, "max: %lu, min: %lu\n", max, min);
 }

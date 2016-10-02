@@ -30,7 +30,7 @@ class Server{
 
     private:
 	//directory operation
-	bool lsDir(const string path);
+	bool lsDir(const string path, map<string, objInfo> &result);
 	bool mkDir(const string path);
 	bool delDir(const string path);
 	bool mvDir(const string path, map<string, objInfo> &result);
@@ -88,12 +88,12 @@ void Server::testObj()
     }
 }
 
-bool Server::lsDir(const string path)
+bool Server::lsDir(const string path, map<string, objInfo> &result)
 {
     for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap. end(); iter++){
 	string temp = iter->first.substr(0, path.length());
 	if(!path.compare(temp) && iter->second.dirOrFile == false)
-	    fprintf(stdout, "%s\n", iter->first.c_str());
+	    result.insert(pair<string, objInfo>(iter->first, iter->second));
     }
     return true;
 }
@@ -260,7 +260,7 @@ bool Server::cpFile(const string path, map<string, objInfo> &result)
 bool Server::getMessage(const string op, const string path, const uint64_t size, map<string, objInfo> &result)
 {
     if(!op.compare("list directory"))
-	return lsDir(path);
+	return lsDir(path, result);
 
     else if(!op.compare("delete directory"))
 	return delDir(path);

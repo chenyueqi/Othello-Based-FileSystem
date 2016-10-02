@@ -9,10 +9,11 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/touchTestcase touch
-	./main ../../testcase/writeTestcase write
-	./main ../../testcase/readTestcase read
-	./main ../../testcase/mkdirTestcase mkdir
+	./main ../../testcase/lsTestcase ls
+#	./main ../../testcase/writeTestcase write
+#	./main ../../testcase/touchTestcase touch
+#	./main ../../testcase/readTestcase read
+#	./main ../../testcase/mkdirTestcase mkdir
 
 clean: 
 	rm -rf main

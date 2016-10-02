@@ -37,9 +37,14 @@ class Gateway
 
     public:
 	Gateway(vector<Server>* server = NULL): serverArr(server){
+	    uint16_t cnt = 0;
 	    for(int i = 0 ; i < dcNum; i++)
-		for(int j = 0 ; j < datacenter[i]; j++){
-		    hashRing.insert(vnode(i,j));
+		for(int j = 0 ; j < (1 << serverPerDcBit); j++){
+		    if(j < datacenter[i]){
+			for(int k = 0 ; k < 10 ;k++)
+			    hashRing.insert(vnode(cnt,k));
+		    }
+		    cnt++;
 		}
 	}
 	bool setting(vector<Server>* p2){serverArr = p2;}
@@ -55,11 +60,7 @@ bool Gateway::getServerNum(const string path, uint16_t &serverNum)
     ret.process_bytes(path.c_str(), path.size());
     ConhashType::iterator iter;
     iter = hashRing.find(ret.checksum());
-    uint8_t dcId = 0;
-    uint16_t serverId = 0;
-    dcId = iter->second.id;
-    serverId = iter->second.vid;
-    serverNum = ((serverId >> 1) << (1+dcBit)) + (dcId << 1) + serverId % 2;
+    serverNum = iter->second.id;
     return true;
 }
 
@@ -325,17 +326,29 @@ bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* data
     return true;
 }
 
-//TODO
 bool Gateway::lsMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
-    /*
-    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++)
-    {
-
-    }
     map<string, objInfo> result;
-    serverArr->at(serverNum1).getMessage("list directory", path, 0, result);
-    */
+    uint16_t cnt = result.size();
+    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++){
+	if(iter->getState()){
+	    iter->getMessage("list directory", path, 0, result);
+	    if(isSameDc(iter->getNum(), dcLabel)){
+		dataflowStat[0].cnt++;
+		dataflowStat[0].size += messageSize;
+		dataflowStat[0].size += ((result.size() - cnt) * objEntrySize);
+		cnt = result.size();
+	    }
+	    else{
+		dataflowStat[1].cnt++;
+		dataflowStat[1].size += messageSize;
+		dataflowStat[1].size += ((result.size() - cnt) * objEntrySize);
+		cnt = result.size();
+	    }
+	}
+    }
+
+    return true;
 }
 
 //TODO
