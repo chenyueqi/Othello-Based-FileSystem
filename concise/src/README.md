@@ -8,7 +8,7 @@ I simulate centralized panel, client, gateway and server in respective head file
 
 The directory named "Othello" contains crucial components of othello.
 
-# Analysis
+# Time Complexity Analysis
 Based on the specific design, we analyze the time complexity of distinct UNIX-like operations as follow:
 
 write: O(1) with data transmission  

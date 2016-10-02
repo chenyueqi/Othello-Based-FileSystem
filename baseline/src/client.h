@@ -12,13 +12,34 @@ class Client
 {
     private:
 	Gateway* gateWay;
+	string testOp;
 	bool getDcLabel(uint8_t& dcLabel);
 	bool dataflowAna(dataflow* stat);
 
+	uint64_t intradata;
+	uint64_t interdata;
+
+	uint32_t intracnt;
+	uint32_t intercnt;
+
+	uint32_t totalopcnt;
+
+
     public:
-	Client(Gateway* p = NULL):gateWay(p){srand((unsigned)time(NULL));}
+	Client(Gateway* p = NULL):gateWay(p){
+	    srand((unsigned)time(NULL));
+	    intradata = 0;
+	    intradata = 0;
+
+	    intercnt = 0;
+	    intercnt = 0;
+
+	    totalopcnt = 0;
+	}
 	bool setGateWay(Gateway* p){gateWay = p;}
 	bool sendMessage(string message);
+	bool setTestOp(string op){testOp = op;}
+	bool getStat();
 };
 
 bool Client::getDcLabel(uint8_t& dcLabel)
@@ -27,9 +48,21 @@ bool Client::getDcLabel(uint8_t& dcLabel)
     return true;
 }
 
+bool Client::getStat()
+{
+    fprintf(stdout, "intra: %f-%f\t, inter: %f-%f\n", (double)intracnt/(double)totalopcnt, (double)intradata/(double)totalopcnt, (double)intercnt/(double)totalopcnt, (double)interdata/(double)totalopcnt);
+    return true;
+}
+
 bool Client::dataflowAna(dataflow dataflowStat[2])
 {
-    fprintf(stdout, "intra: %u-%lu\t inter: %u-%lu\n", dataflowStat[0].cnt, dataflowStat[0].size, dataflowStat[1].cnt, dataflowStat[1].size);
+    totalopcnt++;
+    intracnt += dataflowStat[0].cnt;
+    intradata += dataflowStat[0].size;
+
+    intercnt += dataflowStat[1].cnt;
+    interdata += dataflowStat[1].size;
+//    fprintf(stdout, "intra: %u-%lu\t inter: %u-%lu\n", dataflowStat[0].cnt, dataflowStat[0].size, dataflowStat[1].cnt, dataflowStat[1].size);
     return true;
 }
 /*
@@ -110,7 +143,8 @@ bool Client::sendMessage(string message)
 	return false;
     }
 
-    dataflowAna(dataflowStat);
+    if(!op.compare(testOp))
+	dataflowAna(dataflowStat);
     return true;
 };
 
