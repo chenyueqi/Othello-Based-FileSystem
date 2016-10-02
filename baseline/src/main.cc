@@ -15,6 +15,7 @@ bool init();
 int main(int argc, char* argv[])
 {
     init();
+
     client.setTestOp(argv[2]);
 //    gateWay.testConsHash();
 
@@ -37,10 +38,28 @@ int main(int argc, char* argv[])
 
 bool init()
 {
-    for(int i = 0 ; i < totalServer ; i++){
-	Server s(i, defaultCapacity);
-	serverArr.push_back(s);
+    uint16_t cnt = 0;
+    for(int i = 0 ; i < dcNum ; i++){
+	for(int j = 0; j < (1 << serverPerDcBit); j++){
+	    if(j < datacenter[i]){
+		Server s(cnt, true, defaultCapacity);
+		serverArr.push_back(s);
+	    }
+	    else{
+		Server s(cnt, false, defaultCapacity);
+		serverArr.push_back(s);
+	    }
+	    cnt++;
+	}
     }
+
+    /*
+
+    for(vector<Server>::iterator iter = serverArr.begin(); iter != serverArr.end(); iter++){
+	if(iter->getState())
+	    fprintf(stdout, "%u\n", iter->getNum());
+    }
+    */
 
     //init gateway
     gateWay.setting(&serverArr);

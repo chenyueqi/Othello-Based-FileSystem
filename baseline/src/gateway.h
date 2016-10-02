@@ -16,7 +16,7 @@ class Gateway
 	typedef Conhash<vnode, crc32> ConhashType;
 	ConhashType hashRing;
 
-	bool getServerNum(const string path, uint16_t &id);
+	bool getServerNum(const string path, uint16_t &serverNum);
 	bool isSameDc(uint16_t s1, uint8_t dcLabel){
 	    return dcLabel == ( (s1-(s1>>(dcBit + 1)<<(dcBit + 1)))>>1);
 	}
@@ -37,8 +37,10 @@ class Gateway
 
     public:
 	Gateway(vector<Server>* server = NULL): serverArr(server){
-	    for(int i = 0 ; i < totalServer; i++)
-		hashRing.insert(vnode(i,1));
+	    for(int i = 0 ; i < dcNum; i++)
+		for(int j = 0 ; j < datacenter[i]; j++){
+		    hashRing.insert(vnode(i,j));
+		}
 	}
 	bool setting(vector<Server>* p2){serverArr = p2;}
 	bool getMessage(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow stat[2]);
@@ -47,13 +49,17 @@ class Gateway
 	bool testConsHash();
 };
 
-bool Gateway::getServerNum(const string path, uint16_t &id)
+bool Gateway::getServerNum(const string path, uint16_t &serverNum)
 {
     boost::crc_32_type ret;
     ret.process_bytes(path.c_str(), path.size());
     ConhashType::iterator iter;
     iter = hashRing.find(ret.checksum());
-    id = iter->second.id;
+    uint8_t dcId = 0;
+    uint16_t serverId = 0;
+    dcId = iter->second.id;
+    serverId = iter->second.vid;
+    serverNum = ((serverId >> 1) << (1+dcBit)) + (dcId << 1) + serverId % 2;
     return true;
 }
 
@@ -288,25 +294,51 @@ bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* data
     serverArr->at(serverNum1).getMessage("delete file", path, 0, result);
     serverArr->at(serverNum2).getMessage("delete file", path, 0, result);
     serverArr->at(serverNum3).getMessage("delete file", path, 0, result);
+
+    if(isSameDc(serverNum1, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum2, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum3, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    return true;
 }
 
+//TODO
 bool Gateway::lsMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
-    string path1 = "0" + path;
-    string path2 = "1" + path;
-    string path3 = "2" + path;
+    /*
+    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++)
+    {
 
-    uint16_t serverNum1, serverNum2, serverNum3;
-    getServerNum(path1, serverNum1);
-    getServerNum(path2, serverNum2);
-    getServerNum(path3, serverNum3);
-
+    }
     map<string, objInfo> result;
     serverArr->at(serverNum1).getMessage("list directory", path, 0, result);
-//    serverArr->at(serverNum2).getMessage("delete file", path2, size, result);
-//    serverArr->at(serverNum3).getMessage("delete file", path3, size, result3);
+    */
 }
 
+//TODO
 bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     if(path1.find(path2, 0) != string::npos){
@@ -357,10 +389,12 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
     serverArr->at(serverNum23).getMessage("write file", newpath, fileSize, result);
 }
 
+//TODO
 bool Gateway::rmrMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
 }
 
+//TODO
 bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path11 = "0" + path1;
@@ -399,6 +433,7 @@ bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dc
     serverArr->at(serverNum23).getMessage("write file", path2, fileSize, result);
 }
 
+//TODO
 bool Gateway::mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
 }

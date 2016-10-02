@@ -10,6 +10,8 @@ const uint64_t messageSize = 100;
 const uint8_t dcBit = 0x2;
 const uint8_t serverPerDcBit = 0x7;
 
+const uint8_t dcNum = 4; // 1 << dcBit >= dcNum
+
 const uint16_t totalServer = (1 << (dcBit + serverPerDcBit));
 
 class Gateway;
@@ -22,5 +24,6 @@ struct dataflow
     uint64_t size;
 };
 
+uint16_t datacenter[dcNum] = {1<< serverPerDcBit, 1<<(serverPerDcBit - 1), 1 << (serverPerDcBit - 2) , 1 << (serverPerDcBit -3)};
 
 #endif

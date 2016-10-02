@@ -44,7 +44,7 @@ class Client
 
 bool Client::getDcLabel(uint8_t& dcLabel)
 {
-    dcLabel = rand()%(1<<dcBit);
+    dcLabel = rand()%dcNum;
     return true;
 }
 

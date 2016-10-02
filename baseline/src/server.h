@@ -21,6 +21,7 @@ struct objInfo
 
 class Server{
     private:
+	bool alive;
 	uint16_t num;
 	uint64_t serverCapacity; // in Byte
 	uint64_t availCapacity;
@@ -54,12 +55,14 @@ class Server{
 	}
 
     public:
-	Server(uint16_t n, uint64_t capacity=defaultCapacity): //constructor
+	Server(uint16_t n, bool state = true,  uint64_t capacity=defaultCapacity): //constructor
+	    alive(state),
 	    num(n), 
 	    serverCapacity(capacity), 
 	    availCapacity(serverCapacity), 
 	    usedCapacity(0){}
 
+	bool getState(){return alive;}
 	uint16_t getNum(){return num;}
 	uint64_t getServerCapacity(){return serverCapacity;}
 	uint64_t getAvailableCapacity(){return availCapacity;}
@@ -98,7 +101,7 @@ bool Server::lsDir(const string path)
 bool Server::mkDir(const string path)
 {
     if(objMap.find(path) != objMap.end()){
-	fprintf(stdout, "directory already exist\n");
+	fprintf(stderr, "directory already exist\n");
 	return false;
     }
 
