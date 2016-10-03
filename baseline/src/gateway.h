@@ -21,6 +21,10 @@ class Gateway
 	    return dcLabel == ( (s1-(s1>>(dcBit + 1)<<(dcBit + 1)))>>1);
 	}
 
+	bool isSameDc(uint16_t s1, uint16_t s2){
+	    return ( (s1-(s1>>(dcBit + 1)<<(dcBit + 1)))>>1) == ( (s2-(s2>>(dcBit + 1)<<(dcBit + 1)))>>1);
+	}
+
 	//file related message
 	bool touchMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
 	bool writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2]);
@@ -115,9 +119,9 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 
 bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
-    string path1 = "0" + path;
-    string path2 = "1" + path;
-    string path3 = "2" + path;
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
     map<string, objInfo> result;
@@ -162,9 +166,9 @@ bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* d
 
 bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow* dataflowStat)
 {
-    string path1 = "0" + path;
-    string path2 = "1" + path;
-    string path3 = "2" + path;
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
     map<string, objInfo> result;
@@ -215,9 +219,9 @@ bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t
 bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     uint16_t serverNum1, serverNum2, serverNum3;
-    string path1 = "0" + path;
-    string path2 = "1" + path;
-    string path3 = "2" + path;
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
 
     getServerNum(path1, serverNum1);
     getServerNum(path2, serverNum2);
@@ -282,9 +286,9 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
 
 bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
-    string path1 = "0" + path;
-    string path2 = "1" + path;
-    string path3 = "2" + path;
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
     getServerNum(path1, serverNum1);
@@ -347,11 +351,18 @@ bool Gateway::lsMessage(const string path, const uint8_t dcLabel, dataflow* data
 	    }
 	}
     }
+    fprintf(stderr, "%s\n", path.c_str());
+    for(map<string, objInfo>::iterator iter = result.begin(); iter != result.end(); iter++){
+	fprintf(stderr, "%s ", iter->first.c_str());
+	if(iter->second.dirOrFile)
+	    fprintf(stderr, "directory\n");
+	else
+	    fprintf(stderr, "file %lu\n", iter->second.size);
+    }
 
     return true;
 }
 
-//TODO
 bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     if(path1.find(path2, 0) != string::npos){
@@ -359,9 +370,9 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
 	return true;
     }
 
-    string path11 = "0" + path1;
-    string path12 = "1" + path1;
-    string path13 = "2" + path1;
+    string path11 = "firstfirstfirst" + path1;
+    string path12 = "secondsecondsecond" + path1;
+    string path13 = "thirdthirdthird" + path1;
 
     uint16_t serverNum11, serverNum12, serverNum13;
     getServerNum(path11, serverNum11);
@@ -380,16 +391,15 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
 	fileSize = result2.begin()->second.size;
     if(serverArr->at(serverNum13).getMessage("move file", path1, 0, result3))
 	fileSize = result3.begin()->second.size;
-    
 
     int i = 0;
     for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
     string temp = path1.substr(0, i);
 
     string newpath = path2 + temp;
-    string path21 = "0" + newpath;
-    string path22 = "1" + newpath;
-    string path23 = "2" + newpath;
+    string path21 = "firstfirstfirst" + newpath;
+    string path22 = "secondsecondsecond" + newpath;
+    string path23 = "thirdthirdthird" + newpath;
 
     uint16_t serverNum21, serverNum22, serverNum23;
     getServerNum(path21, serverNum21);
@@ -400,6 +410,96 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
     serverArr->at(serverNum21).getMessage("write file", newpath, fileSize, result);
     serverArr->at(serverNum22).getMessage("write file", newpath, fileSize, result);
     serverArr->at(serverNum23).getMessage("write file", newpath, fileSize, result);
+
+    //former server analysis
+    if(isSameDc(serverNum11, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum12, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum13, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    //later servver analysis
+    if(isSameDc(serverNum21, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum22, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    if(isSameDc(serverNum23, dcLabel)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+    }
+
+    //communication between servers
+    if(isSameDc(serverNum11, serverNum21)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += fileSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += fileSize;
+    }
+
+    if(isSameDc(serverNum12, serverNum22)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += fileSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += fileSize;
+    }
+
+    if(isSameDc(serverNum13, serverNum23)){
+	dataflowStat[0].cnt++;
+	dataflowStat[0].size += messageSize;
+	dataflowStat[0].size += fileSize;
+    }
+    else{
+	dataflowStat[1].cnt++;
+	dataflowStat[1].size += messageSize;
+	dataflowStat[1].size += fileSize;
+    }
 }
 
 //TODO
@@ -410,9 +510,9 @@ bool Gateway::rmrMessage(const string path, const uint8_t dcLabel, dataflow* dat
 //TODO
 bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
-    string path11 = "0" + path1;
-    string path12 = "1" + path1;
-    string path13 = "2" + path1;
+    string path11 = "firstfirstfirst" + path1;
+    string path12 = "secondsecondsecond" + path1;
+    string path13 = "thirdthirdthird" + path1;
 
     uint16_t serverNum11, serverNum12, serverNum13;
     getServerNum(path11, serverNum11);
@@ -431,9 +531,9 @@ bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dc
     if(serverArr->at(serverNum13).getMessage("copy file", path1, 0, result3))
 	fileSize = result3.begin()->second.size;
 
-    string path21 = "0" + path2;
-    string path22 = "1" + path2;
-    string path23 = "2" + path2;
+    string path21 = "firstfirstfirst" + path2;
+    string path22 = "secondsecondsecond" + path2;
+    string path23 = "thirdthirdthird" + path2;
 
     uint16_t serverNum21, serverNum22, serverNum23;
     getServerNum(path21, serverNum21);
@@ -453,9 +553,9 @@ bool Gateway::mvrMessage(const string path1, const string path2, const uint8_t d
 
 bool Gateway::mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2])
 {
-    string path1 = "0" + path;
-    string path2 = "1" + path;
-    string path3 = "2" + path;
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
     map<string, objInfo> result;

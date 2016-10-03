@@ -90,10 +90,13 @@ void Server::testObj()
 
 bool Server::lsDir(const string path, map<string, objInfo> &result)
 {
-    for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap. end(); iter++){
-	string temp = iter->first.substr(0, path.length());
-	if(!path.compare(temp) && iter->second.dirOrFile == false)
+    for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap.end(); iter++){
+	int i = 0;
+	for(i = iter->first.size(); i > 1 && iter->first[i] != '/'; i--);
+	string temp = iter->first.substr(0, i);
+	if(!path.compare(temp) && path.compare(iter->first)){
 	    result.insert(pair<string, objInfo>(iter->first, iter->second));
+	}
     }
     return true;
 }
@@ -178,6 +181,7 @@ bool Server::writeFile(const string path, const uint64_t size)
 	return true;
     }
     else{
+	//fprintf(stderr, "file %s has been exist\n", path.c_str());
 	if(size > availCapacity){
 	    fprintf(stderr, "server capacity isn't enough %s %d\n", __FILE__, __LINE__);
 	    return false;

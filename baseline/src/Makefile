@@ -9,7 +9,8 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/lsTestcase ls
+	./main ../../testcase/mvTestcase mv
+#	./main ../../testcase/lsTestcase ls
 #	./main ../../testcase/writeTestcase write
 #	./main ../../testcase/touchTestcase touch
 #	./main ../../testcase/readTestcase read

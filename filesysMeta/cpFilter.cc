@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 	    newline >> term;
 	    unsigned int index = rand()%file.size();
 
-	    outfile << "cp "<< term << " " << file[index] << '\n';
+	    outfile << "cp "<< term << " "  << file[index] << '\n';
 	}
     }
 
