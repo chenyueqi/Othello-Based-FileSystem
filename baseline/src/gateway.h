@@ -18,11 +18,11 @@ class Gateway
 
 	bool getServerNum(const string path, uint16_t &serverNum);
 	bool isSameDc(uint16_t s1, uint8_t dcLabel){
-	    return dcLabel == ( (s1-(s1>>(dcBit + 1)<<(dcBit + 1)))>>1);
+	    return dcLabel == (s1/(1 << serverPerDcBit));
 	}
 
 	bool isSameDc(uint16_t s1, uint16_t s2){
-	    return ( (s1-(s1>>(dcBit + 1)<<(dcBit + 1)))>>1) == ( (s2-(s2>>(dcBit + 1)<<(dcBit + 1)))>>1);
+	    return (s1/ (1 << serverPerDcBit)) == (s2/ (1<<serverPerDcBit));
 	}
 
 	//file related message

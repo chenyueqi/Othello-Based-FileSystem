@@ -10,12 +10,12 @@ main: $(CFILES) $(HFILES)
 
 test: main
 	./main ../../testcase/mkdirTestcase mkdir
-#	./main ../../testcase/writeTestcase write
+	./main ../../testcase/writeTestcase write
+	./main ../../testcase/touchTestcase touch
+	./main ../../testcase/readTestcase read
+	./main ../../testcase/mvTestcase mv
+	./main ../../testcase/cpTestcase cp
 #	./main ../../testcase/lsTestcase ls
-#	./main ../../testcase/touchTestcase touch
-#	./main ../../testcase/readTestcase read
-#	./main ../../testcase/mvTestcase mv
-#	./main ../../testcase/cpTestcase cp
 
 clean: 
 	rm -rf main
