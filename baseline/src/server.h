@@ -92,10 +92,12 @@ bool Server::lsDir(const string path, map<string, objInfo> &result)
 {
     for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap.end(); iter++){
 	int i = 0;
-	for(i = iter->first.size(); i > 1 && iter->first[i] != '/'; i--);
-	string temp = iter->first.substr(0, i);
-	if(!path.compare(temp) && path.compare(iter->first)){
-	    result.insert(pair<string, objInfo>(iter->first, iter->second));
+	for(i = 0; iter->first[i] != '/' ;i++);
+	string temp1 = iter->first.substr(i, iter->first.length());
+	for(i = temp1.size(); i > 1 && temp1[i] != '/'; i--);
+	string temp2 = temp1.substr(0, i);
+	if(!path.compare(temp2) && path.compare(temp1)){
+	    result.insert(pair<string, objInfo>(temp1, iter->second));
 	}
     }
     return true;
