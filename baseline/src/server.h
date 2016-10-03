@@ -126,8 +126,7 @@ bool Server::mkDir(const string path)
 bool Server::delDir(const string path)
 {
     for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap. end(); iter++){
-	string temp = iter->first.substr(0, path.length());
-	if(!path.compare(temp)){
+	if(iter->first.find(path) != string::npos){
 	    freeStorage(iter->second.size);
 	    freeStorage(objEntrySize);
 	    objMap.erase(iter);
@@ -139,8 +138,7 @@ bool Server::delDir(const string path)
 bool Server::mvDir(const string path, map<string, objInfo> &result)
 {
     for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap. end(); iter++){
-	string temp = iter->first.substr(0, path.length());
-	if(!path.compare(temp)){
+	if(iter->first.find(path) != string::npos){
 	    result.insert(pair<string, objInfo>(iter->first, iter->second));
 	    freeStorage(iter->second.size);
 	    freeStorage(objEntrySize);

@@ -9,12 +9,15 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/mkdirTestcase mkdir
-	./main ../../testcase/writeTestcase write
-	./main ../../testcase/touchTestcase touch
-	./main ../../testcase/readTestcase read
-	./main ../../testcase/mvTestcase mv
-	./main ../../testcase/cpTestcase cp
+	./main ../../testcase/mvrTestcase mvr
+#	./main ../../testcase/rmrTestcase rmr
+#	./main ../../testcase/rmTestcase rm
+#	./main ../../testcase/mkdirTestcase mkdir
+#	./main ../../testcase/writeTestcase write
+#	./main ../../testcase/touchTestcase touch
+#	./main ../../testcase/readTestcase read
+#	./main ../../testcase/mvTestcase mv
+#	./main ../../testcase/cpTestcase cp
 #	./main ../../testcase/lsTestcase ls
 
 clean: 

@@ -284,7 +284,6 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
     return true;
 }
 
-//TODO
 bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     string path1 = "firstfirstfirst" + path;
@@ -398,9 +397,8 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
     if(serverArr->at(serverNum13).getMessage("move file", path13, 0, result3))
 	fileSize = result3.begin()->second.size;
 
-    i = 0;
     for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
-    temp = path1.substr(0, i);
+    temp = path1.substr(i, path1.size());
 
     string newpath = path2 + temp;
     string path21 = "firstfirstfirst" + newpath;
@@ -508,12 +506,89 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
     }
 }
 
-//TODO
-bool Gateway::rmrMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
+bool Gateway::mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
+    int i = 0;
+    for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
+    string temp = path1.substr(0, i);
+
+    if(!temp.compare(path2)){
+	fprintf(stderr, "directory already exists %s %s %s %d\n", path1.c_str(), path2.c_str(), __FILE__, __LINE__);
+	return true;
+    }
+
+    for(vector<Server>::iterator iter0 = serverArr->begin(); iter0 != serverArr->end(); iter0++){
+	if(iter0->getState()){
+	    map<string, objInfo> result;
+	    iter0->getMessage("move directory", path1, 0, result);
+	    if(isSameDc(iter0->getNum(), dcLabel)){
+		dataflowStat[0].cnt++;
+		dataflowStat[0].size += messageSize;
+	    }
+	    else{
+		dataflowStat[1].cnt++;
+		dataflowStat[1].size += messageSize;
+	    }
+	    for(map<string, objInfo>::iterator iter1 = result.begin(); iter1 != result.end(); iter1++){
+		int i = 0;
+		for(i = 0 ; i < iter1->first.size() && iter1->first[i] != '/'; i++);
+		string temp1 = iter1->first.substr(0,i);
+
+		string temp2 = iter1->first.substr(path1.size() + i, iter1->first.size());
+
+		string newpath = temp1 + path2 + temp2;
+		uint16_t serverNum;
+		getServerNum(newpath, serverNum);
+		if(iter1->second.dirOrFile){
+		    map<string, objInfo> result1;
+		    serverArr->at(serverNum).getMessage("make directory", newpath, 0, result1);
+		    if(isSameDc(iter0->getNum(), serverNum)){
+			dataflowStat[0].cnt++;
+			dataflowStat[0].size += messageSize;
+		    }
+		    else{
+			dataflowStat[1].cnt++;
+			dataflowStat[1].size += messageSize;
+		    }
+		}
+		else{
+		    map<string, objInfo> result1;
+		    serverArr->at(serverNum).getMessage("write file", newpath, iter1->second.size, result1);
+		    if(isSameDc(iter0->getNum(), serverNum)){
+			dataflowStat[0].cnt++;
+			dataflowStat[0].size += messageSize;
+			dataflowStat[0].size += iter1->second.size;
+		    }
+		    else{
+			dataflowStat[1].cnt++;
+			dataflowStat[1].size += messageSize;
+			dataflowStat[1].size += iter1->second.size;
+		    }
+		}
+	    }
+	}
+    }
 }
 
-//TODO
+bool Gateway::rmrMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
+{
+    map<string, objInfo> result;
+    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++){
+	if(iter->getState()){
+	    iter->getMessage("delete directory", path, 0, result);
+	    if(isSameDc(iter->getNum(), dcLabel)){
+		dataflowStat[0].cnt++;
+		dataflowStat[0].size += messageSize;
+	    }
+	    else{
+		dataflowStat[1].cnt++;
+		dataflowStat[1].size += messageSize;
+	    }
+	}
+    }
+    return true;
+}
+
 bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
 {
     if(!path1.compare(path2)){
@@ -647,10 +722,6 @@ bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dc
     }
 }
 
-//TODO
-bool Gateway::mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
-{
-}
 
 bool Gateway::mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2])
 {
