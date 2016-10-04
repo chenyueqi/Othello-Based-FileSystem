@@ -1,0 +1,6 @@
+touch	total related operation time:	516939
+intradatacenter access time:	310656
+intradatacenter data flow:	31065600
+interdatacenter access time:	1240161
+interdatacenter data flow:	124016100
+intra: 0.600953-60.095292	, inter: 2.399047-239.904708

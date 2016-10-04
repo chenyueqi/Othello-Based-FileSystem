@@ -9,16 +9,16 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/mvrTestcase mvr
-#	./main ../../testcase/rmrTestcase rmr
-#	./main ../../testcase/rmTestcase rm
-#	./main ../../testcase/mkdirTestcase mkdir
-#	./main ../../testcase/writeTestcase write
-#	./main ../../testcase/touchTestcase touch
-#	./main ../../testcase/readTestcase read
-#	./main ../../testcase/mvTestcase mv
-#	./main ../../testcase/cpTestcase cp
-#	./main ../../testcase/lsTestcase ls
+	./main ../../testcase/lsTestcase ls > ./result/ls
+#	./main ../../testcase/cpTestcase cp > ./result/cp
+#	./main ../../testcase/mvTestcase mv > ./result/mv
+#	./main ../../testcase/rmTestcase rm > ./result/rm
+#	./main ../../testcase/readTestcase read > ./result/read
+#	./main ../../testcase/touchTestcase touch > ./result/touch
+#	./main ../../testcase/mkdirTestcase mkdir > ./result/mkdir
+#	./main ../../testcase/writeTestcase write > ./result/write
+#	./main ../../testcase/mvrTestcase mvr > ./result/mvr
+#	./main ../../testcase/rmrTestcase rmr > ./result/rmr
 
 clean: 
 	rm -rf main

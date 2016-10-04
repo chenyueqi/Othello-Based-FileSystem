@@ -1,0 +1,6 @@
+read	total related operation time:	516939
+intradatacenter access time:	102919
+intradatacenter data flow:	1045102335062
+interdatacenter access time:	414020
+interdatacenter data flow:	4334048271055
+intra: 0.199093-2021713.074583	, inter: 0.800907-8384061.312950

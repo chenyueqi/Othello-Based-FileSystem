@@ -50,6 +50,11 @@ bool Client::getDcLabel(uint8_t& dcLabel)
 
 bool Client::getStat()
 {
+    fprintf(stdout, "total related operation time:\t%u\n", totalopcnt);
+    fprintf(stdout, "intradatacenter access time:\t%u\n", intracnt);
+    fprintf(stdout, "intradatacenter data flow:\t%lu\n", intradata);
+    fprintf(stdout, "interdatacenter access time:\t%u\n", intercnt);
+    fprintf(stdout, "interdatacenter data flow:\t%lu\n", interdata);
     fprintf(stdout, "intra: %f-%f\t, inter: %f-%f\n", (double)intracnt/(double)totalopcnt, (double)intradata/(double)totalopcnt, (double)intercnt/(double)totalopcnt, (double)interdata/(double)totalopcnt);
     return true;
 }

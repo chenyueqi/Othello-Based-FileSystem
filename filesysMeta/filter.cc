@@ -7,6 +7,8 @@ int main(int argc, char* argv[])
     ifstream infile(argv[1], ios::in);
     ofstream outfile(argv[2], ios::out);
 
+    unsigned int cnt_file = 0;
+    unsigned int cnt_directory = 0;
     while(!infile.eof())
     {
 	string line;
@@ -19,10 +21,14 @@ int main(int argc, char* argv[])
 	string term;
 	newline >> term;
 
-	if(term.find('d') != string::npos)
+	if(term.find('d') != string::npos){
+	    cnt_directory++;
 	    outfile<<"d\t";
-	else
+	}
+	else{
+	    cnt_file++;
 	    outfile<<"f\t";
+	}
 	newline >> term;
 	newline >> term;
 	newline >> term;
@@ -35,4 +41,6 @@ int main(int argc, char* argv[])
     }
     infile.close();
     outfile.close();
+    fprintf(stderr, "%u\n", cnt_file);
+    fprintf(stderr, "%u\n", cnt_directory);
 }

@@ -1,0 +1,6 @@
+cp	total related operation time:	516939
+intradatacenter access time:	1037886
+intradatacenter data flow:	6619079585039
+interdatacenter access time:	3614547
+interdatacenter data flow:	19710430261621
+intra: 2.007753-12804372.633984	, inter: 6.992212-38129122.123928

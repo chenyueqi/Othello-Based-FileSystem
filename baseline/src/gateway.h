@@ -360,7 +360,7 @@ bool Gateway::lsMessage(const string path, const uint8_t dcLabel, dataflow* data
 	else
 	    fprintf(stderr, "file %lu\n", iter->second.size);
     }
-*/
+    */
     return true;
 }
 
