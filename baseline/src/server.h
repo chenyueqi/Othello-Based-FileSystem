@@ -67,6 +67,7 @@ class Server{
 	uint64_t getServerCapacity(){return serverCapacity;}
 	uint64_t getAvailableCapacity(){return availCapacity;}
 	uint64_t getUsedCapacity(){return usedCapacity;}
+	uint64_t getFileNum(){return objMap.size();}
 
 	bool setNum(uint16_t n){num = n;}
 	bool setServerCapacity(uint64_t capacity){availCapacity = capacity;}

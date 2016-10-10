@@ -89,7 +89,7 @@ bool loadBalanceAna()
 		max = iter->getUsedCapacity();
 	    if(iter->getUsedCapacity() < min)
 		min = iter->getUsedCapacity();
-	    fprintf(stdout, "server number: %u, used storage: %lu\n", iter->getNum(), iter->getUsedCapacity());
+	    fprintf(stdout, "server number: %u, used storage: %lu, file number: %lu, \n", iter->getNum(), iter->getUsedCapacity(), iter->getFileNum());
 	}
     }
     fprintf(stdout, "usedstorage: <1G:\t%u\n", cnt1);

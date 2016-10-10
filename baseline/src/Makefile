@@ -10,13 +10,13 @@ main: $(CFILES) $(HFILES)
 
 test: main
 	./main ../../testcase/lsTestcase ls > ./result/ls
+#	./main ../../testcase/writeTestcase write > ./result/write
 #	./main ../../testcase/cpTestcase cp > ./result/cp
 #	./main ../../testcase/mvTestcase mv > ./result/mv
 #	./main ../../testcase/rmTestcase rm > ./result/rm
 #	./main ../../testcase/readTestcase read > ./result/read
 #	./main ../../testcase/touchTestcase touch > ./result/touch
 #	./main ../../testcase/mkdirTestcase mkdir > ./result/mkdir
-#	./main ../../testcase/writeTestcase write > ./result/write
 #	./main ../../testcase/mvrTestcase mvr > ./result/mvr
 #	./main ../../testcase/rmrTestcase rmr > ./result/rmr
 
