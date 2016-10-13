@@ -4,6 +4,8 @@
 #include<vector>
 using namespace std;
 
+const unsigned int testUp = 100;
+
 vector<string> directory;
 
 int main(int argc, char* argv[])
@@ -34,23 +36,10 @@ int main(int argc, char* argv[])
 	}
     }
 
-    infile.clear();
-    infile.seekg(0, ios::beg);
-    while(!infile.eof()){
-	string line;
-	getline(infile, line);
-	stringstream newline(line);
-
-	string term;
-	newline >> term;
-
-	if(!term.compare("d")){
-	    newline >> term;
-	    newline >> term;
-	    unsigned int index = rand()%directory.size();
-
-	    outfile << "rmr "<< term << '\n';
-	}
+    for(int i = 0 ; i < testUp ; i++)
+    {
+	unsigned int index = rand()%directory.size();
+	outfile << "rmr " << directory[index] << '\n';
     }
 
     infile.close();

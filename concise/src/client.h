@@ -13,8 +13,6 @@ class Client
 	Gateway* gateWay;
 	map<string, uint64_t> directoryId;
 	bool getDirId(string name, uint64_t &id);
-	n，JavaScript语言程序。
-
 	bool getFaId(string name, uint64_t &id);
 
     public:

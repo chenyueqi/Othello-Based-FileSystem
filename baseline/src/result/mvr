@@ -1,0 +1,6 @@
+mvr	total related operation time:	100
+intradatacenter access time:	9565
+intradatacenter data flow:	657331761791
+interdatacenter access time:	34650
+interdatacenter data flow:	376599692403
+intra: 95.650000-6573317617.910000	, inter: 346.500000-3765996924.030000

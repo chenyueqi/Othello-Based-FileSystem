@@ -8,12 +8,14 @@
 #include"gateway.h"
 using namespace std;
 
+map<string, uint8_t> directoryId;
+
 class Client
 {
     private:
 	Gateway* gateWay;
 	string testOp;
-	bool getDcLabel(uint8_t& dcLabel);
+	bool getDcLabel(string path, uint8_t& dcLabel);
 	bool dataflowAna(dataflow* stat);
 
 	uint64_t intradata;
@@ -42,8 +44,18 @@ class Client
 	bool getStat();
 };
 
-bool Client::getDcLabel(uint8_t& dcLabel)
+bool Client::getDcLabel(string path, uint8_t& dcLabel)
 {
+    int i = 0;
+    for(; i < path.size() && path[i] != '/'; i++);
+    string ancestorName = path.substr(0, i);
+    map<string, uint8_t>::iterator iter = directoryId.find(ancestorName);
+    if(iter == directoryId.end()){
+	dcLabel = rand()%dcNum;
+	directoryId.insert(pair<string, uint8_t>(path, dcLabel));
+    }
+    else
+	dcLabel = iter->second;
     dcLabel = rand()%dcNum;
     return true;
 }
@@ -92,7 +104,7 @@ bool Client::sendMessage(string message)
     if(!op.compare("mkdir") || !op.compare("rm") || !op.compare("read") || !op.compare("touch")){
 	string path;	
 	getline(me, path, ' ');
-	getDcLabel(dcLabel);
+	getDcLabel(path, dcLabel);
 	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
     }
 
@@ -101,21 +113,21 @@ bool Client::sendMessage(string message)
 	getline(me, path, ' ');
 	uint64_t size = 0;
 	me>>size;
-	getDcLabel(dcLabel);
+	getDcLabel(path, dcLabel);
 	gateWay->getMessage(op, path, "", size, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("rmr")){
 	string path;
 	getline(me, path, ' ');
-	getDcLabel(dcLabel);
+	getDcLabel(path, dcLabel);
 	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
     }
 
     else if(!op.compare("ls")){
 	string path;
 	getline(me, path, ' ');
-	getDcLabel(dcLabel);
+	getDcLabel(path, dcLabel);
 	gateWay->getMessage(op, path, "", 0, dcLabel, dataflowStat);
     }
 
@@ -123,7 +135,7 @@ bool Client::sendMessage(string message)
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
-	getDcLabel(dcLabel);
+	getDcLabel(path1, dcLabel);
 	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
     }
 
@@ -131,7 +143,7 @@ bool Client::sendMessage(string message)
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
-	getDcLabel(dcLabel);
+	getDcLabel(path1, dcLabel);
 	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
     }
 
@@ -139,7 +151,7 @@ bool Client::sendMessage(string message)
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
-	getDcLabel(dcLabel);
+	getDcLabel(path1, dcLabel);
 	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
     }
 

@@ -9,16 +9,16 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/lsTestcase ls > ./result/ls
+	./main ../../testcase/rmrTestcase rmr > ./result/rmr
 #	./main ../../testcase/writeTestcase write > ./result/write
 #	./main ../../testcase/cpTestcase cp > ./result/cp
 #	./main ../../testcase/mvTestcase mv > ./result/mv
 #	./main ../../testcase/rmTestcase rm > ./result/rm
+#	./main ../../testcase/mkdirTestcase mkdir > ./result/mkdir
 #	./main ../../testcase/readTestcase read > ./result/read
 #	./main ../../testcase/touchTestcase touch > ./result/touch
-#	./main ../../testcase/mkdirTestcase mkdir > ./result/mkdir
 #	./main ../../testcase/mvrTestcase mvr > ./result/mvr
-#	./main ../../testcase/rmrTestcase rmr > ./result/rmr
+#	./main ../../testcase/lsTestcase ls > ./result/ls
 
 clean: 
 	rm -rf main

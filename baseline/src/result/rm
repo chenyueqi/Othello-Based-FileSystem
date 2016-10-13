@@ -1,6 +1,6 @@
-rm	total related operation time:	516939
-intradatacenter access time:	310019
-intradatacenter data flow:	31001900
-interdatacenter access time:	1240798
-interdatacenter data flow:	124079800
-intra: 0.599721-59.972066	, inter: 2.400279-240.027934
+rm	total related operation time:	344626
+intradatacenter access time:	206438
+intradatacenter data flow:	20643800
+interdatacenter access time:	827440
+interdatacenter data flow:	82744000
+intra: 0.599020-59.902039	, inter: 2.400980-240.097961

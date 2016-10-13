@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     serverArr[0].testDirFile();
     fprintf(stdout, "\n");
 
-
     while(!file.eof()){
 	getline(file, message);
 	if(!message.compare(""))
@@ -44,41 +43,6 @@ int main(int argc, char* argv[])
 	client.testDirID();
 	fprintf(stdout, "\n");
     }
-    
-   /* 
-    st.pop();
-    st.push("/home/user/foo/bar");
-    st.push("/home/user/foo");
-    serverAcceCnt = 0;
-    dcAcceCnt = 0;
-    serverArr[0].getMessage("make directory", st , "", "", resultMap, false, 0, info,  0, serverAcceCnt, dcAcceCnt);
-
-    serverArr[0].testDirFile();
-    fprintf(stderr, "\n");
-
-    st.pop();
-    st.push("/home/user/foo/bar1");
-    serverAcceCnt = 0;
-    dcAcceCnt = 0;
-    serverArr[0].getMessage("write file", st, "", "", resultMap, false, 0, info,  100 , serverAcceCnt , dcAcceCnt);
-
-    serverArr[0].testDirFile();
-    fprintf(stderr, "\n");
-
-    st.pop();
-    st.push("/home/user/foo/bar2");
-    serverAcceCnt = 0;
-    dcAcceCnt = 0;
-    serverArr[0].getMessage("touch file", st, "", "", resultMap, false, 0, info,  100 , serverAcceCnt , dcAcceCnt);
-
-    serverArr[0].testDirFile();
-    fprintf(stderr, "\n");
-
-    serverArr[0].getMessage("write file", st, "", "", resultMap, false, 0, info,  100 , serverAcceCnt , dcAcceCnt);
-
-    serverArr[0].testDirFile();
-    fprintf(stderr, "\n");
-    */
 }
 
 bool init()

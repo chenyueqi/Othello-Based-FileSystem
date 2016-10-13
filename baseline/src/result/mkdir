@@ -1,6 +1,6 @@
-mkdir	total related operation time:	12936
-intradatacenter access time:	7713
-intradatacenter data flow:	771300
-interdatacenter access time:	31095
-interdatacenter data flow:	3109500
-intra: 0.596243-59.624304	, inter: 2.403757-240.375696
+mkdir	total related operation time:	8624
+intradatacenter access time:	5226
+intradatacenter data flow:	522600
+interdatacenter access time:	20646
+interdatacenter data flow:	2064600
+intra: 0.605983-60.598330	, inter: 2.394017-239.401670
