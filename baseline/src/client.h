@@ -8,7 +8,6 @@
 #include"gateway.h"
 using namespace std;
 
-map<string, uint8_t> directoryId;
 
 class Client
 {
@@ -26,6 +25,7 @@ class Client
 
 	uint32_t totalopcnt;
 
+	map<string, uint8_t> directoryId;
 
     public:
 	Client(Gateway* p = NULL):gateWay(p){
@@ -153,6 +153,12 @@ bool Client::sendMessage(string message)
 	getline(me, path2, ' ');
 	getDcLabel(path1, dcLabel);
 	gateWay->getMessage(op, path1, path2, 0, dcLabel, dataflowStat);
+    }
+
+    else if(!op.compare("exit")){
+	uint32_t num;
+	me>>num;
+	gateWay->getMessage(op, "", "", num, dcLabel, dataflowStat);
     }
 
     else{

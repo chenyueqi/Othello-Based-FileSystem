@@ -5,6 +5,7 @@
 #include<sstream>
 #include<cstdio>
 #include"gateway.h"
+
 using namespace std;
 
 class Client
@@ -14,16 +15,59 @@ class Client
 	map<string, uint64_t> directoryId;
 	bool getDirId(string name, uint64_t &id);
 	bool getFaId(string name, uint64_t &id);
+	bool dataflowAna(dataflow* stat);
+
+	uint64_t intradata;
+	uint64_t interdata;
+
+	uint32_t intracnt;
+	uint32_t intercnt;
+
+	uint32_t totalopcnt;
 
     public:
-	Client(Gateway* p = NULL):gateWay(p){}
+	Client(Gateway* p = NULL):gateWay(p){
+	    intradata = 0;
+	    interdata = 0;
+
+	    intracnt = 0;
+	    intercnt = 0;
+
+	    totalopcnt = 0;
+	}
+
 	bool setGateWay(Gateway* p){
 	    gateWay = p; 
 	    directoryId.insert(pair<string, uint64_t>("/", 0));
 	}
+
 	bool sendMessage(string message);
 	bool testDirID();
+	bool getStat();
 };
+
+bool Client::getStat()
+{
+    fprintf(stdout, "total related operation time:\t%u\n", totalopcnt);
+    fprintf(stdout, "intradatacenter access time:\t%u\n", intracnt);
+    fprintf(stdout, "intradatacenter data flow:\t%lu\n", intradata);
+    fprintf(stdout, "interdatacenter access time:\t%u\n", intercnt);
+    fprintf(stdout, "interdatacenter data flow:\t%lu\n", interdata);
+    fprintf(stdout, "intra: %f-%f\t, inter: %f-%f\n", (double)intracnt/(double)totalopcnt, (double)intradata/(double)totalopcnt, (double)intercnt/(double)totalopcnt, (double)interdata/(double)totalopcnt);
+    return true;
+}
+
+bool Client::dataflowAna(dataflow dataflowStat[2])
+{
+    totalopcnt++;
+    intracnt += dataflowStat[0].cnt;
+    intradata += dataflowStat[0].size;
+
+    intercnt += dataflowStat[1].cnt;
+    interdata += dataflowStat[1].size;
+//    fprintf(stdout, "intra: %u-%lu\t inter: %u-%lu\n", dataflowStat[0].cnt, dataflowStat[0].size, dataflowStat[1].cnt, dataflowStat[1].size);
+    return true;
+}
 
 bool Client::testDirID()
 {
@@ -66,13 +110,16 @@ bool Client::getFaId(string name, uint64_t &id)
  */
 bool Client::sendMessage(string message)
 {
-    uint16_t serverAcceCnt = 0;
-    uint8_t dcAcceCnt = 0;
-    uint64_t otherTime = 0;
     
     stringstream me(message);
     string op;
     getline(me, op, ' ');
+
+    dataflow dataflowStat[2];
+    dataflowStat[0].cnt = 0;
+    dataflowStat[0].size = 0;
+    dataflowStat[1].cnt = 0;
+    dataflowStat[1].size = 0;
 
     map<string, uint64_t> newdir;
     vector<string> olddir;

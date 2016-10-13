@@ -9,7 +9,9 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/rmrTestcase rmr > ./result/rmr
+	./main ../../testcase/faultTolTestcase rmr > ./result/faultTol
+#	./main ../../testcase/scalaTestcase rmr > ./result/scala
+#	./main ../../testcase/rmrTestcase rmr > ./result/rmr
 #	./main ../../testcase/writeTestcase write > ./result/write
 #	./main ../../testcase/cpTestcase cp > ./result/cp
 #	./main ../../testcase/mvTestcase mv > ./result/mv

@@ -71,6 +71,7 @@ class Server{
 
 	bool setNum(uint16_t n){num = n;}
 	bool setServerCapacity(uint64_t capacity){availCapacity = capacity;}
+	bool setState(bool state){alive = state; return true;}
 
 	void testObj();
 

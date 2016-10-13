@@ -38,9 +38,11 @@ class Gateway
 	bool cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
 	bool mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
 	bool mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool exitMessage(const uint32_t num);
 
     public:
 	Gateway(vector<Server>* server = NULL): serverArr(server){
+	    srand((unsigned)time(NULL));
 	    uint16_t cnt = 0;
 	    for(int i = 0 ; i < dcNum; i++)
 		for(int j = 0 ; j < (1 << serverPerDcBit); j++){
@@ -115,6 +117,21 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 
     else if(!op.compare("mkdir")) 
 	return mkdirMessage(path1, dcLabel, dataflowStat);
+
+    else if(!op.compare("exit")) 
+	return exitMessage(size);
+}
+
+bool Gateway::exitMessage(const uint32_t num)
+{
+    for(int i = 0 ; i < num ;){
+	uint32_t candidate = rand()% (serverArr->size());
+	if(serverArr->at(candidate).getState()){
+	    serverArr->at(candidate).setState(false);
+	    fprintf(stderr, "%u ", candidate);
+	    i++;
+	}
+    }
 }
 
 bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
