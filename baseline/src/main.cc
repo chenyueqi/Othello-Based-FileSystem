@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 //	fprintf(stderr, "\n");
     }
 
-    fprintf(stdout, "%s\t", argv[2]);
+    fprintf(stdout, "%s\n", argv[2]);
     string op(argv[2]);
     if(!op.compare("write"))
 	loadBalanceAna();
@@ -61,6 +61,11 @@ bool init()
     gateWay.setting(&serverArr);
     //init client
     client.setGateWay(&gateWay);
+
+    fprintf(stdout, "== system overview ==\n");
+    for(int i = 0 ; i < dcNum ; i++)
+	fprintf(stdout, "Data Center %d:\t%d\n", i, datacenter[i]);
+    fprintf(stdout, "== END ==\n");
 }
 
 bool loadBalanceAna()
@@ -89,7 +94,7 @@ bool loadBalanceAna()
 		max = iter->getUsedCapacity();
 	    if(iter->getUsedCapacity() < min)
 		min = iter->getUsedCapacity();
-	    fprintf(stdout, "server number: %u, used storage: %lu, file number: %lu, \n", iter->getNum(), iter->getUsedCapacity(), iter->getFileNum());
+	    fprintf(stdout, "server number: %u\tused storage: %lu  \tfile number: %lu, \n", iter->getNum(), iter->getUsedCapacity(), iter->getFileNum());
 	}
     }
     fprintf(stdout, "usedstorage: <1G:\t%u\n", cnt1);

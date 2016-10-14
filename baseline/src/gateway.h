@@ -124,6 +124,7 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 
 bool Gateway::exitMessage(const uint32_t num)
 {
+    fprintf(stdout, "TOTAL %u severs have exited abruptedly\n", num);
     for(int i = 0 ; i < num ;){
 	uint32_t candidate = rand()% (serverArr->size());
 	if(serverArr->at(candidate).getState()){
@@ -147,9 +148,17 @@ bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* d
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    serverArr->at(serverNum1).getMessage("touch file", path1, 0, result);
-    serverArr->at(serverNum2).getMessage("touch file", path2, 0, result);
-    serverArr->at(serverNum3).getMessage("touch file", path3, 0, result);
+    uint8_t failcnt = 0;
+
+    if(!(serverArr->at(serverNum1).getState() && serverArr->at(serverNum1).getMessage("touch file", path1, 0, result)))
+	failcnt++;
+    if(!(serverArr->at(serverNum2).getState() && serverArr->at(serverNum2).getMessage("touch file", path2, 0, result)))
+	failcnt++;
+    if(!(serverArr->at(serverNum3).getState() && serverArr->at(serverNum3).getMessage("touch file", path3, 0, result)))
+	failcnt++;
+
+    if(failcnt == 3)
+	fprintf(stderr, "fail ! fail ! fail ! %s %d\n", __FILE__ , __LINE__);
 
     if(isSameDc(serverNum1, dcLabel)){
 	dataflowStat[0].cnt++;
@@ -194,9 +203,14 @@ bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    serverArr->at(serverNum1).getMessage("write file", path1, size, result);
-    serverArr->at(serverNum2).getMessage("write file", path2, size, result);
-    serverArr->at(serverNum3).getMessage("write file", path3, size, result);
+    uint8_t failcnt = 0;
+
+    if(!(serverArr->at(serverNum1).getState() && serverArr->at(serverNum1).getMessage("write file", path1, size, result)))
+	failcnt++;
+    if(!(serverArr->at(serverNum2).getState() && serverArr->at(serverNum2).getMessage("write file", path2, size, result)))
+	failcnt++;
+    if(!(serverArr->at(serverNum3).getState() && serverArr->at(serverNum3).getMessage("write file", path3, size, result)))
+	failcnt++;
 
     if(isSameDc(serverNum1, dcLabel)){
 	dataflowStat[0].cnt++;
@@ -230,6 +244,12 @@ bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t
 	dataflowStat[1].size += messageSize;
 	dataflowStat[1].size += size;
     }
+
+    if(failcnt == 3){
+	fprintf(stderr, "fail ! fail ! fail ! %s %d\n", __FILE__ , __LINE__);
+	return false;
+    }
+
     return true;
 }
 
@@ -248,6 +268,8 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
     map<string, objInfo> result2;
     map<string, objInfo> result3;
 
+    uint8_t failcnt = 0;
+
     if(isSameDc(serverNum1, dcLabel)){
 	dataflowStat[0].cnt++;
 	dataflowStat[0].size += messageSize;
@@ -257,13 +279,15 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
 	dataflowStat[1].size += messageSize;
     }
 
-    if(serverArr->at(serverNum1).getMessage("read file", path1, 0, result1)){
+    if(serverArr->at(serverNum1).getState() && serverArr->at(serverNum1).getMessage("read file", path1, 0, result1)){
 	if(isSameDc(serverNum1, dcLabel))
 	    dataflowStat[0].size += result1.begin()->second.size;
 	else
 	    dataflowStat[1].size += result1.begin()->second.size;
 	return true;
     }
+    
+    failcnt++;
 
     if(isSameDc(serverNum2, dcLabel)){
 	dataflowStat[0].cnt++;
@@ -274,13 +298,15 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
 	dataflowStat[1].size += messageSize;
     }
 
-    if(serverArr->at(serverNum2).getMessage("read file", path2, 0, result2)){
+    if(serverArr->at(serverNum2).getState() && serverArr->at(serverNum2).getMessage("read file", path2, 0, result2)){
 	if(isSameDc(serverNum2, dcLabel))
 	    dataflowStat[0].size += result2.begin()->second.size;
 	else
 	    dataflowStat[1].size += result2.begin()->second.size;
 	return true;
     }
+
+    failcnt++;
 
     if(isSameDc(serverNum3, dcLabel)){
 	dataflowStat[0].cnt++;
@@ -291,13 +317,21 @@ bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* da
 	dataflowStat[1].size += messageSize;
     }
 
-    if(serverArr->at(serverNum3).getMessage("read file", path3, 0, result3)){
+    if(serverArr->at(serverNum3).getState() && serverArr->at(serverNum3).getMessage("read file", path3, 0, result3)){
 	if(isSameDc(serverNum3, dcLabel))
 	    dataflowStat[0].size += result3.begin()->second.size;
 	else
 	    dataflowStat[1].size += result3.begin()->second.size;
 	return true;
     }
+
+    failcnt++;
+
+    if(failcnt == 3){
+	fprintf(stdout, "fail ! fail ! fail ! %s %d\n", __FILE__ , __LINE__);
+	return false;
+    }
+
     return true;
 }
 
