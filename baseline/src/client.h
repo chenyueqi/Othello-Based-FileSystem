@@ -161,6 +161,14 @@ bool Client::sendMessage(string message)
 	gateWay->getMessage(op, "", "", num, dcLabel, dataflowStat);
     }
 
+    else if(!op.compare("check")){
+	string path;
+	getline(me, path, ' ');
+	uint64_t size = 0;
+	me>>size;
+	gateWay->getMessage(op, path, "", size, dcLabel, dataflowStat);
+    }
+
     else{
 	fprintf(stderr, "INVALID operation %s %d\n", __FILE__, __LINE__);
 	return false;

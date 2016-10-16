@@ -39,6 +39,7 @@ class Gateway
 	bool mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
 	bool mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
 	bool exitMessage(const uint32_t num);
+	bool checkMessage(const string path, const uint64_t size);
 
     public:
 	Gateway(vector<Server>* server = NULL): serverArr(server){
@@ -120,6 +121,9 @@ bool Gateway::sendMessageToServer(const string op, const string path1, const str
 
     else if(!op.compare("exit")) 
 	return exitMessage(size);
+
+    else if(!op.compare("check"))
+	return checkMessage(path1, size);
 }
 
 bool Gateway::exitMessage(const uint32_t num)
@@ -133,6 +137,23 @@ bool Gateway::exitMessage(const uint32_t num)
 	    i++;
 	}
     }
+}
+
+bool Gateway::checkMessage(const string path, const uint64_t size)
+{
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
+
+    uint16_t serverNum1, serverNum2, serverNum3;
+    map<string, objInfo> result;
+
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
+
+    fprintf(stdout, "%u %u %u %lu\n", serverNum1, serverNum2, serverNum3, size);
+    return true;
 }
 
 bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)

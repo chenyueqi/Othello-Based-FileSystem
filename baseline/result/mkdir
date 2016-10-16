@@ -1,0 +1,14 @@
+== system overview ==
+Data Center 0:	128
+Data Center 1:	64
+Data Center 2:	32
+Data Center 3:	16
+Data Center 4:	64
+== END ==
+mkdir
+total related operation time:	8624
+intradatacenter access time:	5297
+intradatacenter data flow:	529700
+interdatacenter access time:	20575
+interdatacenter data flow:	2057500
+intra: 0.614216-61.421614	, inter: 2.385784-238.578386

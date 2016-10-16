@@ -1,0 +1,14 @@
+== system overview ==
+Data Center 0:	128
+Data Center 1:	64
+Data Center 2:	32
+Data Center 3:	16
+Data Center 4:	64
+== END ==
+mv
+total related operation time:	344626
+intradatacenter access time:	691793
+intradatacenter data flow:	4418116823993
+interdatacenter access time:	2409544
+interdatacenter data flow:	8170747119331
+intra: 2.007373-12820033.381094	, inter: 6.991765-23709026.943211

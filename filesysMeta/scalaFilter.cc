@@ -2,8 +2,6 @@
 #include<sstream>
 using namespace std;
 
-const int addNum = 10;
-
 int main(int argc, char* argv[])
 {
     ifstream infile(argv[1], ios::in);
@@ -30,7 +28,24 @@ int main(int argc, char* argv[])
 	}
     }
 
-    outfile << "add server " << addNum << '\n';
+    infile.clear();
+    infile.seekg(0, ios::beg);
+    while(!infile.eof()){
+	string line;
+	getline(infile, line);
+	stringstream newline(line);
+
+	string term;
+	newline >> term;
+
+	if(!term.compare("f")){
+	    string size;
+	    newline >> size;
+	    newline >> term;
+	    outfile << "check "<< term << " " << size << '\n';
+	}
+    }
+
     infile.close();
     outfile.close();
 }

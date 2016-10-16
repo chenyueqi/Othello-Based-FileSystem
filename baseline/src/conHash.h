@@ -21,6 +21,7 @@ struct vnode{
     }
 };
 
+
 struct crc32
 {
     typedef uint32_t result_type;
@@ -33,6 +34,14 @@ struct crc32
     }
 };
 
+/*
+struct cityHash
+{
+    uint32_t operator()(const vnode& node){
+
+    }
+}
+*/
 
 template <typename T, typename Hash, typename Alloc = std::allocator<std::pair<const typename Hash::result_type,T > > >
 class Conhash

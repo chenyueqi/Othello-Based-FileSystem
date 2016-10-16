@@ -1,0 +1,38 @@
+== system overview ==
+Data Center 0:	128
+Data Center 1:	64
+Data Center 2:	32
+Data Center 3:	16
+Data Center 4:	64
+== END ==
+TOTAL 10 severs have exited abruptedly
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+fail ! fail ! fail ! ./gateway.h 352
+read
+total related operation time:	344626
+intradatacenter access time:	70608
+intradatacenter data flow:	872111528029
+interdatacenter access time:	285022
+interdatacenter data flow:	2713987390150
+intra: 0.204883-2530602.821694	, inter: 0.827047-7875167.254212

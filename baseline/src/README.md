@@ -1,6 +1,9 @@
 # Brief Introduction
 In this directory, I try to use implement [consistant hash](http://www.cs.princeton.edu/courses/archive/fall07/cos518/papers/chash.pdf) and use it in a network file system
 
+# Apparatus
+I am considering using [CityHash of Google](https://github.com/google/cityhash) instead of CRC on the basis of the poor load balance of the later.
+
 # Time Complexity Analysis
 Directory File is not supported in this implement. According to orginal consistent hash, all files are considered as objects without relation. Thus, directory is also considered as an ordinary file here, but not a father of its sub file or sub direcctory. Based on this, We analyze the time complexity of distinct UNIX-like operations as follow:
 
