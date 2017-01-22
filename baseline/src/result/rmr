@@ -1,6 +1,0 @@
-rmr	total related operation time:	100
-intradatacenter access time:	6768
-intradatacenter data flow:	676800
-interdatacenter access time:	23632
-interdatacenter data flow:	2363200
-intra: 67.680000-6768.000000	, inter: 236.320000-23632.000000

@@ -1,6 +1,12 @@
 #include<fstream>
 #include<sstream>
+#include<vector>
+#include<cstdlib>
 using namespace std;
+
+const unsigned int testUp = 1000;
+
+vector<string> fileSet;
 
 int main(int argc, char* argv[])
 {
@@ -24,25 +30,15 @@ int main(int argc, char* argv[])
 	    string size;
 	    newline >> size;
 	    newline >> term;
+	    fileSet.push_back(term);
 	    outfile << "write " << term << " " << size << '\n';
 	}
     }
 
-    infile.clear();
-    infile.seekg(0, ios::beg);
-    while(!infile.eof()){
-	string line;
-	getline(infile, line);
-	stringstream newline(line);
-
-	string term;
-	newline >> term;
-
-	if(!term.compare("f")){
-	    newline >> term;
-	    newline >> term;
-	    outfile << "read "<< term << '\n';
-	}
+    for(int i = 0 ; i < testUp ; i++)
+    {
+	unsigned int index = rand()%fileSet.size();
+	outfile<<"read "<< fileSet[index] << '\n';
     }
 
     infile.close();

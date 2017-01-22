@@ -1,6 +1,0 @@
-ls	total related operation time:	100
-intradatacenter access time:	5840
-intradatacenter data flow:	625600
-interdatacenter access time:	24560
-interdatacenter data flow:	2702272
-intra: 58.400000-6256.000000	, inter: 245.600000-27022.720000

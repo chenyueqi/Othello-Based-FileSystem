@@ -1,6 +1,0 @@
-mv	total related operation time:	344626
-intradatacenter access time:	689842
-intradatacenter data flow:	2740665160774
-interdatacenter access time:	2411477
-interdatacenter data flow:	10176419958521
-intra: 2.001712-7952578.043369	, inter: 6.997374-29528880.463230
