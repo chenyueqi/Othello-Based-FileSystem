@@ -4,7 +4,9 @@
 #include<vector>
 using namespace std;
 
-vector<string> file;
+const unsigned int testUp = 1000;
+
+vector<string> fileSet;
 
 int main(int argc, char* argv[])
 {
@@ -29,28 +31,17 @@ int main(int argc, char* argv[])
 	    string size;
 	    newline >> size;
 	    newline >> term;
-	    file.push_back(term);
+	    fileSet.push_back(term);
 	    outfile << "write " << term << " " << size << '\n';
 	}
     }
 
-    infile.clear();
-    infile.seekg(0, ios::beg);
-    while(!infile.eof()){
-	string line;
-	getline(infile, line);
-	stringstream newline(line);
-
-	string term;
-	newline >> term;
-
-	if(!term.compare("f")){
-	    newline >> term;
-	    newline >> term;
-	    unsigned int index = rand()%file.size();
-
-	    outfile << "cp "<< term << " "  << file[index] << '\n';
-	}
+    for(int i = 0; i < testUp; i++)
+    {
+	unsigned int index = rand()%fileSet.size();
+	outfile << "cp " << fileSet[index] << " ";
+	index = rand()%fileSet.size();
+	outfile << fileSet[index] << '\n';
     }
 
     infile.close();

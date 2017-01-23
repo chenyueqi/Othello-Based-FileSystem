@@ -11,7 +11,7 @@ Client client;
 Gateway gateWay;
 
 bool init();
-//bool loadBalanceAna();
+bool loadBalanceAna();
 
 int main(int argc, char* argv[])
 {
@@ -29,8 +29,11 @@ int main(int argc, char* argv[])
 	    continue;
 	fprintf(stdout, "%s\n", message.c_str());
 	client.sendMessage(message);
-//	fprintf(stdout, "\n");
     }
+
+    string op(argv[2]);
+    if(!op.compare("loadbalance"))
+	loadBalanceAna();
 }
 
 bool init()
@@ -54,7 +57,7 @@ bool init()
 
     fprintf(stdout, "== END ==\n");
 }
-/*
+
 bool loadBalanceAna()
 {
     uint64_t max = 0;
@@ -64,6 +67,7 @@ bool loadBalanceAna()
     uint16_t cnt3 = 0;
     uint16_t cnt4 = 0;
     uint16_t cnt5 = 0;
+    fprintf(stdout, "== load balance overview ==\n");
     for(vector<Server>::iterator iter = serverArr.begin(); iter != serverArr.end(); iter++)
     {
 	if(iter->getState()){
@@ -92,5 +96,5 @@ bool loadBalanceAna()
 
     fprintf(stdout, "max:\t%lu\n", max);
     fprintf(stdout, "min:\t%lu\n", min);
+    fprintf(stdout, "== END ==\n");
 }
-*/

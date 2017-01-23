@@ -114,7 +114,7 @@ bool Gateway::exitMessage(const uint32_t num)
 	uint32_t candidate = rand()% (serverArr->size());
 	if(serverArr->at(candidate).getState()){
 	    serverArr->at(candidate).setState(false);
-	    fprintf(stderr, "%u ", candidate);
+	    fprintf(stdout, "%u ", candidate);
 	    i++;
 	}
     }
@@ -285,7 +285,10 @@ bool Gateway::readMessage(const string path)
 	}
     }
     else
+    {
+	fprintf(stdout, "# %u #\n", serverNum1);
 	cnt++;
+    }
 
     if(serverArr->at(serverNum2).getState())
     {
@@ -302,7 +305,10 @@ bool Gateway::readMessage(const string path)
 	}
     }
     else
+    {
+	fprintf(stdout, "# %u #\n", serverNum2);
 	cnt++;
+    }
 
     if(serverArr->at(serverNum3).getState())
     {
@@ -319,9 +325,19 @@ bool Gateway::readMessage(const string path)
 	}
     }
     else
+    {
+	fprintf(stdout, "# %u #\n", serverNum3);
 	cnt++;
+    }
 
-    return true;
+    if(cnt == 3)
+    {
+	fprintf(stdout, "ERROR!\n");
+	fprintf(stderr, "ERROR!\n");
+	return false;
+    }
+    else
+	return true;
 }
 
 bool Gateway::rmMessage(const string path)
@@ -469,7 +485,7 @@ bool Gateway::mvrMessage(const string path1, const string path2)
 		for(i = 0 ; i < iter1->first.size() && iter1->first[i] != '/'; i++);
 		string temp1 = iter1->first.substr(0,i);
 
-		string temp2 = iter1->first.substr(path1.size() + i, iter1->first.size());
+		string temp2 = iter1->first.substr(temp.size() + i, iter1->first.size());
 
 		string newpath = temp1 + path2 + temp2;
 		uint16_t serverNum;
@@ -477,7 +493,8 @@ bool Gateway::mvrMessage(const string path1, const string path2)
 		if(iter1->second.dirOrFile)
 		{
 		    map<string, objInfo> result1;
-		    serverArr->at(serverNum).getMessage("make directory", newpath, 0, result1);
+		    if(!serverArr->at(serverNum).getMessage("make directory", newpath, 0, result1)) // it's possible that one of the destination directory has already existed one sub-directory sharing same name of source directory, just ignore it
+			fprintf(stderr, " %s %s\n", iter1->first.c_str(), newpath.c_str());
 		    fprintf(stdout, "# %u %u %u %u 0 #\n", iter0->getNum(), serverNum, MSGSIZE, MSGSIZE);
 		}
 		else

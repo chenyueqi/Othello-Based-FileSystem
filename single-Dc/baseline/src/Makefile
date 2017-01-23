@@ -9,20 +9,22 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ~/multi-dc/testcase/readTestcase read > ../result/read
+	./main ~/multi-dc/testcase/writeTestcase loadbalance > ../result/loadbalance
+
+# 已经测试的
+#	./main ~/multi-dc/testcase/scalaTestcase check > ../result/scala
+#	./main ~/multi-dc/testcase/faultTolTestcase exit > ../result/faultTol
+#	./main ~/multi-dc/testcase/mvrTestcase mvr > ../result/mvr
+#	./main ~/multi-dc/testcase/rmrTestcase rmr > ../result/rmr
+#	./main ~/multi-dc/testcase/mkdirTestcase mkdir > ../result/mkdir
+#	./main ~/multi-dc/testcase/lsTestcase ls > ../result/ls
+#	./main ~/multi-dc/testcase/rmTestcase rm > ../result/rm
+#	./main ~/multi-dc/testcase/mvTestcase mv > ../result/mv
+#	./main ~/multi-dc/testcase/readTestcase read > ../result/read
 #	./main ~/multi-dc/testcase/cpTestcase cp > ../result/cp
-#	./main1 ~/multi-dc/testcase/mvTestcase mv > ../result/mv
-#	./main1 ~/multi-dc/testcase/rmTestcase rm > ../result/rm
-#	./main1 ~/multi-dc/testcase/mkdirTestcase mkdir > ../result/mkdir
-#	./main1 ~/multi-dc/testcase/readTestcase read > ../result/read
-#	./main1 ~/multi-dc/testcase/touchTestcase touch > ../result/touch
-#	./main1 ~/multi-dc/testcase/faultTolTestcase read > ../result/faultTol
-#	./main1 ~/multi-dc/testcase/writeTestcase write > ../result/write
-#	./main1 ~/multi-dc/testcase/rmrTestcase rmr > ../result/rmr
-#	./main1 ~/multi-dc/testcase/mvrTestcase mvr > ../result/mvr
-#	./main1 ~/multi-dc/testcase/lsTestcase ls > ../result/ls
-#	./main1 ~/multi-dc/testcase/scalaTestcase check > ../result/scala1
-#	./main2 ~/multi-dc/testcase/scalaTestcase check > ../result/scala2
+#	./main ~/multi-dc/testcase/touchTestcase touch > ../result/touch
+#	./main ~/multi-dc/testcase/writeTestcase write > ../result/write
+
 
 clean: 
 	rm -rf main
