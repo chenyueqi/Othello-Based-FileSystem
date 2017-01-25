@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	string term;
 	newline >> term;
 
-	if(!term.compare("read"))
+	if(!term.compare("ls"))
 	{
 	    cnt++;
 	    flag = true;
@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
 
 	    newline >> tmp;
 	    msgSize += tmp;
+
 	    double latency = (double)msgSize/(getTP()*1024); // since we need to translate to ms, we just ignore one 1024. Besides, we need to consider other factors which also influence the performace, we ignore another 1024.
 	    latency_t += latency;
 	}
@@ -54,5 +55,5 @@ int main(int argc, char* argv[])
 	    flag = false;
     }
 
-    fprintf(stdout, "%s latency: %lf\n", argv[1], latency_t/cnt);
+    fprintf(stdout, "%s latency: %lf\n", argv[1], latency_t/cnt/3);
 }

@@ -9,6 +9,7 @@
 #include <boost/functional/hash.hpp>
 #include <boost/format.hpp>
 #include <boost/crc.hpp>
+#include "city.h"
 
 struct vnode{
     std::size_t id;
@@ -34,14 +35,16 @@ struct crc32
     }
 };
 
-/*
 struct cityHash
 {
-    uint32_t operator()(const vnode& node){
+    typedef uint32_t result_type;
 
+    uint32_t operator()(const vnode& node){
+	std::string name = node.to_str();
+	return CityHash32(name.c_str(), name.size());
     }
-}
-*/
+};
+
 
 template <typename T, typename Hash, typename Alloc = std::allocator<std::pair<const typename Hash::result_type,T > > >
 class Conhash

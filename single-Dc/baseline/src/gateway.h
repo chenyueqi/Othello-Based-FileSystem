@@ -14,6 +14,7 @@ class Gateway
     private:
 	vector<Server>* serverArr;
 	typedef Conhash<vnode, crc32> ConhashType;
+//	typedef Conhash<vnode, cityHash> ConhashType;
 	ConhashType hashRing;
 
 	bool getServerNum(const string path, uint16_t &serverNum);
