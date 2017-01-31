@@ -230,6 +230,9 @@ bool Server::mvFile(const string path, map<string, objInfo> &result)
     map<string, objInfo>::iterator iter = objMap.find(path);
     if(iter == objMap.end()){
 	fprintf(stderr, "file %s doesn't exist %s %d\n", path.c_str(), __FILE__, __LINE__);
+	struct objInfo tmpobj;
+	tmpobj.size = 0;
+	result.insert(pair<string, objInfo>(path, tmpobj));
 	return false;
     }
     else{
@@ -247,6 +250,9 @@ bool Server::cpFile(const string path, map<string, objInfo> &result)
     map<string, objInfo>::iterator iter = objMap.find(path);
     if(iter == objMap.end()){
 	fprintf(stderr, "file %s doesn't exist %s %d\n", path.c_str(), __FILE__, __LINE__);
+	struct objInfo tmpobj;
+	tmpobj.size = 0;
+	result.insert(pair<string, objInfo>(path, tmpobj));
 	return false;
     }
     else{

@@ -1,12 +1,15 @@
 CC=g++
 CFLAGS= -std=c++11 -Wno-unused-result
 
-All: filter enlarge touchFilter writeFilter readFilter rmFilter mvFilter cpFilter mkdirFilter lsFilter mvrFilter rmrFilter faultTolFilter scalaFilter
+All: filter enlarge enlarg-multi touchFilter writeFilter readFilter rmFilter mvFilter cpFilter mkdirFilter lsFilter mvrFilter rmrFilter faultTolFilter scalaFilter
 
 filter: filter.cc
 	$(CC) $^ $(CFLAGS) -o $@
 
 enlarge: enlarge.cc
+	$(CC) $^ $(CFLAGS) -o $@
+	
+enlarge-multi: enlarge-multi.cc
 	$(CC) $^ $(CFLAGS) -o $@
 	
 touchFilter: touchFilter.cc
@@ -60,22 +63,51 @@ gen:	filter enlarge touchFilter writeFilter readFilter rmFilter mvFilter cpFilte
 	./rmrFilter enlargeddata rmrTestcase
 	./faultTolFilter enlargeddata faultTolTestcase
 	./scalaFilter enlargeddata scalaTestcase
-	mv touchTestcase ../testcase
-	mv writeTestcase ../testcase
-	mv readTestcase ../testcase
-	mv rmTestcase ../testcase
-	mv mvTestcase ../testcase
-	mv cpTestcase ../testcase
-	mv mkdirTestcase ../testcase
-	mv lsTestcase ../testcase
-	mv mvrTestcase ../testcase
-	mv rmrTestcase ../testcase
-	mv faultTolTestcase ../testcase
-	mv scalaTestcase ../testcase
+	mv touchTestcase ../single-Dc/testcase
+	mv writeTestcase ../single-Dc/testcase
+	mv readTestcase ../single-Dc/testcase
+	mv rmTestcase ../single-Dc/testcase
+	mv mvTestcase ../single-Dc/testcase
+	mv cpTestcase ../single-Dc/testcase
+	mv mkdirTestcase ../single-Dc/testcase
+	mv lsTestcase ../single-Dc/testcase
+	mv mvrTestcase ../single-Dctestcase
+	mv rmrTestcase ../single-Dc/testcase
+	mv faultTolTestcase ../single-Dc/testcase
+	mv scalaTestcase ../single-Dc/testcase
 	
+multi-gen:	filter enlarge-multi touchFilter writeFilter readFilter rmFilter mvFilter cpFilter mkdirFilter lsFilter mvrFilter rmrFilter faultTolFilter scalaFilter
+	./filter metadata briefdata
+	./enlarge-multi briefdata enlargeddata
+	./touchFilter enlargeddata touchTestcase
+	./writeFilter enlargeddata writeTestcase
+	./readFilter enlargeddata readTestcase
+	./rmFilter enlargeddata rmTestcase
+	./mvFilter enlargeddata mvTestcase
+	./cpFilter enlargeddata cpTestcase
+	./mkdirFilter enlargeddata mkdirTestcase
+	./lsFilter enlargeddata lsTestcase
+	./mvrFilter enlargeddata mvrTestcase
+	./rmrFilter enlargeddata rmrTestcase
+	./faultTolFilter enlargeddata faultTolTestcase
+	./scalaFilter enlargeddata scalaTestcase
+	mv touchTestcase ../multi-Dc/testcase
+	mv writeTestcase ../multi-Dc/testcase
+	mv readTestcase ../multi-Dc/testcase
+	mv rmTestcase ../multi-Dc/testcase
+	mv mvTestcase ../multi-Dc/testcase
+	mv cpTestcase ../multi-Dc/testcase
+	mv mkdirTestcase ../multi-Dc/testcase
+	mv lsTestcase ../multi-Dc/testcase
+	mv mvrTestcase ../multi-Dc/testcase
+	mv rmrTestcase ../multi-Dc/testcase
+	mv faultTolTestcase ../multi-Dc/testcase
+	mv scalaTestcase ../multi-Dc/testcase
+
 clean: 
 	rm -rf filter
 	rm -rf enlarge
+	rm -rf enlarge-multi
 	rm -rf touchFilter
 	rm -rf writeFilter
 	rm -rf readFilter

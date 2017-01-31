@@ -17,44 +17,32 @@ int main(int argc, char* argv[])
 {
     init();
 
-    client.setTestOp(argv[2]);
 //    gateWay.testConsHash();
 
     ifstream file(argv[1], ios::in);
     string message;
 
-    while(!file.eof()){
+    while(!file.eof())
+    {
 	getline(file, message);
 	if(!message.compare(""))
 	    continue;
-//	fprintf(stderr, "%s\n", message.c_str());
+	fprintf(stdout, "%s\n", message.c_str());
 	client.sendMessage(message);
-//	fprintf(stderr, "\n");
     }
 
-    fprintf(stdout, "%s\n", argv[2]);
     string op(argv[2]);
-    if(!op.compare("write"))
+    if(!op.compare("loadbalance"))
 	loadBalanceAna();
-
-    client.getStat();
 }
 
 bool init()
 {
-    uint16_t cnt = 0;
-    for(int i = 0 ; i < dcNum ; i++){
-	for(int j = 0; j < (1 << serverPerDcBit); j++){
-	    if(j < datacenter[i]){
-		Server s(cnt, true, defaultCapacity);
-		serverArr.push_back(s);
-	    }
-	    else{
-		Server s(cnt, false, defaultCapacity);
-		serverArr.push_back(s);
-	    }
-	    cnt++;
-	}
+    fprintf(stdout, "== INITIAL ==\n");
+    for(uint16_t cnt = 0; cnt < server_num; cnt++)
+    {
+	Server s(cnt, true, defaultCapacity);
+	serverArr.push_back(s);
     }
 
     //init gateway
@@ -63,8 +51,10 @@ bool init()
     client.setGateWay(&gateWay);
 
     fprintf(stdout, "== system overview ==\n");
-    for(int i = 0 ; i < dcNum ; i++)
-	fprintf(stdout, "Data Center %d:\t%d\n", i, datacenter[i]);
+
+    for(uint16_t cnt = 0 ; cnt < server_num ; cnt++)
+	fprintf(stdout, "No.%u Capacity:%lu \n", serverArr[cnt].getNum(), serverArr[cnt].getServerCapacity());
+
     fprintf(stdout, "== END ==\n");
 }
 
@@ -77,6 +67,7 @@ bool loadBalanceAna()
     uint16_t cnt3 = 0;
     uint16_t cnt4 = 0;
     uint16_t cnt5 = 0;
+    fprintf(stdout, "== load balance overview ==\n");
     for(vector<Server>::iterator iter = serverArr.begin(); iter != serverArr.end(); iter++)
     {
 	if(iter->getState()){
@@ -105,4 +96,5 @@ bool loadBalanceAna()
 
     fprintf(stdout, "max:\t%lu\n", max);
     fprintf(stdout, "min:\t%lu\n", min);
+    fprintf(stdout, "== END ==\n");
 }

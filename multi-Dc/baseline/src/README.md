@@ -7,7 +7,7 @@ I am considering using [CityHash of Google](https://github.com/google/cityhash) 
 # Time Complexity Analysis
 Directory File is not supported in this implement. According to orginal consistent hash, all files are considered as objects without relation. Thus, directory is also considered as an ordinary file here, but not a father of its sub file or sub direcctory. Based on this, We analyze the time complexity of distinct UNIX-like operations as follow:
 
-touch: O(1) without data transmision
+touch: O(1) without data transmision  
 write: O(1) with data transmission  
 read: O(1) with data transmission  
 rm: O(1)  
@@ -24,7 +24,7 @@ N represents number of files in the system.
 
 Since we could not control the hash result of consistent hash, operations like mv or rename, mvr is in need of data transmission between servers. What's more, each file in the system is conisdered as a single objetc as I have mentioned. This results in O(N) complexity in directory related operations. To make it worse, consistent hash is unaware of cloud existence and , a gamut of cross datacenter transmission is unavoided, which definitely slow down performance.
 
-#file Organization
+
  ./common.h  -- some typdef and definition of class'  
  ./conHash.h -- implementation fo consistent hash ring  
  ./client.h  -- client  
@@ -33,3 +33,24 @@ Since we could not control the hash result of consistent hash, operations like m
  ./main.cc   -- includes main function
  ./Makefile  -- make tools
  ./README.md -- file you are opening
+
+
+#output format
+ Since we are using output for analyzing, output format matters
+
+ 	# client location #
+ touch:	# dcNum serverNum MSGSIZE #
+ write: # dcNum serverNum MSGSIZE size #
+ read: 	# dcNum serverNum MSGSIZE size #
+ rm: 	# dcNum serverNum MSGSIZE #
+ mv: 	# sdc src ddc des MSGSIZE MSGSIZE size #
+ cp: 	# sdc src ddc des MSGSIZE MSGSIZE size #
+ ls: 	# dcNum serverNum MSGSIZE size #
+ mdkir: # dcNum serverNum MSGSIZE #
+ rmdir: # dcNum serverNum MSGSIZE #
+ mvr: 	# sdc src ddc des MSGSIZE MSGSIZE size #
+
+ ERROR: ERROR!
+ exit: 	# TOTAL ${servernum} servers have exited abruptedly #
+	# ${serve list} #
+ check: # serverNum size #

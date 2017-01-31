@@ -4,6 +4,7 @@
 
 using namespace std;
 
+/*
 const float throughPut = 1.9; // 0.9 Gbps
 const float fluc = 0.6; // 0.6 Gbps
 
@@ -13,13 +14,15 @@ double getTP()
     offset = (offset - 5)/10*fluc;
     return (throughPut + offset);
 }
+*/
 
 int main(int argc, char* argv[])
 {
     ifstream infile(argv[1], ios::in);
 
     uint32_t cnt = 0;
-    double latency_t = 0;
+ //   double latency_t = 0;
+    uint64_t totalMsg = 0;
     bool flag = false;
 
     while(!infile.eof())
@@ -48,12 +51,15 @@ int main(int argc, char* argv[])
 	    newline >> tmp;
 	    msgSize += tmp;
 
-	    double latency = (double)msgSize/(getTP()*1024); // since we need to translate to ms, we just ignore one 1024. Besides, we need to consider other factors which also influence the performace, we ignore another 1024.
-	    latency_t += latency;
+	    totalMsg += msgSize;
+
+	//    double latency = (double)msgSize/(getTP()*1024); // since we need to translate to ms, we just ignore one 1024. Besides, we need to consider other factors which also influence the performace, we ignore another 1024.
+	//    latency_t += latency;
 	}
 	else
 	    flag = false;
     }
 
-    fprintf(stdout, "%s latency: %lf\n", argv[1], latency_t/cnt/3);
+ //   fprintf(stdout, "%s latency: %lf\n", argv[1], latency_t/cnt/3);
+    fprintf(stdout, "%s data transmission: %.2lf Byte, count time: %u\n", argv[1], (double)totalMsg/(double)cnt, cnt);
 }

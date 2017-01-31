@@ -14,49 +14,116 @@ class Gateway
     private:
 	vector<Server>* serverArr;
 	typedef Conhash<vnode, crc32> ConhashType;
+//	typedef Conhash<vnode, cityHash> ConhashType;
 	ConhashType hashRing;
 
 	bool getServerNum(const string path, uint16_t &serverNum);
-	bool isSameDc(uint16_t s1, uint8_t dcLabel){
-	    return dcLabel == (s1/(1 << serverPerDcBit));
-	}
-
-	bool isSameDc(uint16_t s1, uint16_t s2){
-	    return (s1/ (1 << serverPerDcBit)) == (s2/ (1<<serverPerDcBit));
-	}
 
 	//file related message
-	bool touchMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool readMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool rmMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool mvMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool touchMessage(const string path);
+	bool writeMessage(const string path, const uint64_t size);
+	bool readMessage(const string path);
+	bool rmMessage(const string path);
+	bool mvMessage(const string path1, const string path2);
 	
 	//directory related message
-	bool lsMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool rmrMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2]);
-	bool mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow dataflowStat[2]);
+	bool lsMessage(const string path);
+	bool rmrMessage(const string path);
+	bool cpMessage(const string path1, const string path2);
+	bool mkdirMessage(const string path);
+	bool mvrMessage(const string path1, const string path2);
+
 	bool exitMessage(const uint32_t num);
 	bool checkMessage(const string path, const uint64_t size);
+	string serverInterpret(const uint16_t num)
+	{
+	    string result;
+	    stringstream temp;
+	    if(num < 256)
+	    {
+		uint16_t innernum = num;
+		temp<<innernum;
+		result = "0 "+temp.str();
+	    }
+	    else if(num < (256+256))
+	    {
+		uint16_t innernum = num;
+		temp<<(innernum-256);
+		result = "1 "+temp.str();
+	    }
+	    else if(num < (256+256+128))
+	    {
+		uint16_t innernum = num;
+		temp<<(innernum-256-256);
+		result = "2 "+temp.str();
+	    }
+	    else if(num < (256+256+128+512))
+	    {
+		uint16_t innernum = num;
+		temp<<(innernum-256-256-128);
+		result = "3 "+temp.str();
+	    }
+	    else if(num < (256+256+128+512+64))
+	    {
+		uint16_t innernum = num;
+		temp<<(innernum-256-256-128-512);
+		result = "4 "+temp.str();
+	    }
+	    return result;
+	}
 
     public:
-	Gateway(vector<Server>* server = NULL): serverArr(server){
-	    srand((unsigned)time(NULL));
-	    uint16_t cnt = 0;
-	    for(int i = 0 ; i < dcNum; i++)
-		for(int j = 0 ; j < (1 << serverPerDcBit); j++){
-		    if(j < datacenter[i]){
-			for(int k = 0 ; k < 10 ;k++)
-			    hashRing.insert(vnode(cnt,k));
-		    }
-		    cnt++;
-		}
+	Gateway(vector<Server>* server = NULL): serverArr(server)
+    	{
+	    for(uint16_t cnt = 0; cnt < server_num; cnt++)
+		for(int i = 0; i < 10; i++)
+		    hashRing.insert(vnode(cnt, i));
 	}
+
 	bool setting(vector<Server>* p2){serverArr = p2;}
-	bool getMessage(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow stat[2]);
-	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow stat[2]);
+	bool getMessage(const string op, const string path1, const string path2, const uint64_t size)
+	{	
+		return sendMessageToServer(op, path1, path2, size);
+	}
+
+	bool sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size)
+	{
+		if(!op.compare("touch"))
+			return touchMessage(path1);
+
+    		else if(!op.compare("write")) 
+			return writeMessage(path1 , size);//id2 means size in write operation
+
+		else if(!op.compare("read")) 
+			return readMessage(path1);
+
+    		else if(!op.compare("rm")) 
+			return rmMessage(path1);
+
+    		else if(!op.compare("ls")) 
+			return lsMessage(path1);
+
+    		else if(!op.compare("rmr")) 
+			return rmrMessage(path1);
+
+    		else if(!op.compare("cp")) 
+			return cpMessage(path1, path2);
+
+    		else if(!op.compare("mv")) 
+			return mvMessage(path1, path2);
+
+    		else if(!op.compare("mvr")) 
+			return mvrMessage(path1, path2);
+
+    		else if(!op.compare("mkdir")) 
+			return mkdirMessage(path1);
+
+    		else if(!op.compare("exit")) 
+			return exitMessage(size);
+
+    		else if(!op.compare("check"))
+			return checkMessage(path1, size);
+	}
 
 	bool testConsHash();
 };
@@ -71,72 +138,25 @@ bool Gateway::getServerNum(const string path, uint16_t &serverNum)
     return true;
 }
 
+
 bool Gateway::testConsHash()
 {
     for(ConhashType::iterator iter = hashRing.begin(); iter != hashRing.end(); iter++)
 	fprintf(stdout, "hash value:%u server id:%u %s %d\n",(unsigned) iter->first, (unsigned)iter->second.id,  __FILE__ , __LINE__);
 }
 
-bool Gateway::getMessage(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2])
-{
-    return sendMessageToServer(op, path1, path2, size, dcLabel, dataflowStat);
-}
-
-/*
- * touch, write, read, remove, cp, move for file and recursive remove 
- * has nothing to do with metadata in othello
- */
-bool Gateway::sendMessageToServer(const string op, const string path1, const string path2, const uint64_t size, const uint8_t dcLabel, dataflow dataflowStat[2])
-{
-    if(!op.compare("touch"))
-	return touchMessage(path1, dcLabel, dataflowStat);
-
-    //id2 means size in write operation
-    else if(!op.compare("write")) 
-	writeMessage(path1 , size, dcLabel, dataflowStat);
-
-    else if(!op.compare("read")) 
-	readMessage(path1, dcLabel, dataflowStat);
-
-    else if(!op.compare("rm")) 
-	rmMessage(path1, dcLabel, dataflowStat);
-
-    else if(!op.compare("ls")) 
-	lsMessage(path1, dcLabel, dataflowStat);
-
-    else if(!op.compare("rmr")) 
-	rmrMessage(path1, dcLabel, dataflowStat);
-
-    else if(!op.compare("cp")) 
-	cpMessage(path1, path2, dcLabel, dataflowStat);
-
-    else if(!op.compare("mv")) 
-	mvMessage(path1, path2, dcLabel, dataflowStat);
-
-    else if(!op.compare("mvr")) 
-	mvrMessage(path1, path2, dcLabel, dataflowStat);
-
-    else if(!op.compare("mkdir")) 
-	return mkdirMessage(path1, dcLabel, dataflowStat);
-
-    else if(!op.compare("exit")) 
-	return exitMessage(size);
-
-    else if(!op.compare("check"))
-	return checkMessage(path1, size);
-}
-
 bool Gateway::exitMessage(const uint32_t num)
 {
-    fprintf(stdout, "TOTAL %u severs have exited abruptedly\n", num);
+    fprintf(stdout, "# TOTAL %u severs have exited abruptedly #\n# ", num);
     for(int i = 0 ; i < num ;){
 	uint32_t candidate = rand()% (serverArr->size());
 	if(serverArr->at(candidate).getState()){
 	    serverArr->at(candidate).setState(false);
-	    fprintf(stderr, "%u ", candidate);
+	    fprintf(stdout, "%u ", candidate);
 	    i++;
 	}
     }
+    fprintf(stdout, " #\n");
 }
 
 bool Gateway::checkMessage(const string path, const uint64_t size)
@@ -152,298 +172,286 @@ bool Gateway::checkMessage(const string path, const uint64_t size)
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    fprintf(stdout, "%u %u %u %lu\n", serverNum1, serverNum2, serverNum3, size);
+    fprintf(stdout, "# %u %lu #\n", serverNum1, size);
+    fprintf(stdout, "# %u %lu #\n", serverNum2, size);
+    fprintf(stdout, "# %u %lu #\n", serverNum3, size);
     return true;
 }
 
-bool Gateway::touchMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
+bool Gateway::touchMessage(const string path)
 {
     string path1 = "firstfirstfirst" + path;
     string path2 = "secondsecondsecond" + path;
     string path3 = "thirdthirdthird" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
-    map<string, objInfo> result;
 
     getServerNum(path1, serverNum1);
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    uint8_t failcnt = 0;
+    map<string, objInfo> useless_result;
 
-    if(!(serverArr->at(serverNum1).getState() && serverArr->at(serverNum1).getMessage("touch file", path1, 0, result)))
-	failcnt++;
-    if(!(serverArr->at(serverNum2).getState() && serverArr->at(serverNum2).getMessage("touch file", path2, 0, result)))
-	failcnt++;
-    if(!(serverArr->at(serverNum3).getState() && serverArr->at(serverNum3).getMessage("touch file", path3, 0, result)))
-	failcnt++;
+    uint8_t cnt = 0;
 
-    if(failcnt == 3)
-	fprintf(stderr, "fail ! fail ! fail ! %s %d\n", __FILE__ , __LINE__);
-
-    if(isSameDc(serverNum1, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
+    if(serverArr->at(serverNum1).getState())
+    {
+	if(!serverArr->at(serverNum1).getMessage("touch file", path1, 0, useless_result))
+	    cnt++;
+	fprintf(stdout, "# %u %u #\n", serverNum1, MSGSIZE);
     }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
+    else
+	cnt++;
+
+    if(serverArr->at(serverNum2).getState())
+    {
+	if(!serverArr->at(serverNum2).getMessage("touch file", path2, 0, useless_result))
+	    cnt++;
+	fprintf(stdout, "# %u %u #\n", serverNum2, MSGSIZE);
     }
+    else
+	cnt++;
 
-    if(isSameDc(serverNum2, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
+    if(serverArr->at(serverNum3).getState())
+    {
+	if(!serverArr->at(serverNum3).getMessage("touch file", path3, 0, useless_result))
+	    cnt++;
+	fprintf(stdout, "# %u %u #\n", serverNum3, MSGSIZE);
     }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
+    else
+	cnt++;
 
-    if(isSameDc(serverNum3, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    return true;
-}
-
-bool Gateway::writeMessage(const string path, const uint64_t size, const uint8_t dcLabel, dataflow* dataflowStat)
-{
-    string path1 = "firstfirstfirst" + path;
-    string path2 = "secondsecondsecond" + path;
-    string path3 = "thirdthirdthird" + path;
-
-    uint16_t serverNum1, serverNum2, serverNum3;
-    map<string, objInfo> result;
-
-    getServerNum(path1, serverNum1);
-    getServerNum(path2, serverNum2);
-    getServerNum(path3, serverNum3);
-
-    uint8_t failcnt = 0;
-
-    if(!(serverArr->at(serverNum1).getState() && serverArr->at(serverNum1).getMessage("write file", path1, size, result)))
-	failcnt++;
-    if(!(serverArr->at(serverNum2).getState() && serverArr->at(serverNum2).getMessage("write file", path2, size, result)))
-	failcnt++;
-    if(!(serverArr->at(serverNum3).getState() && serverArr->at(serverNum3).getMessage("write file", path3, size, result)))
-	failcnt++;
-
-    if(isSameDc(serverNum1, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += size;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += size;
-    }
-
-    if(isSameDc(serverNum2, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += size;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += size;
-    }
-
-    if(isSameDc(serverNum3, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += size;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += size;
-    }
-
-    if(failcnt == 3){
-	fprintf(stderr, "fail ! fail ! fail ! %s %d\n", __FILE__ , __LINE__);
+    if(cnt == 3)
+    {
+	fprintf(stdout, "ERROR!\n");
 	return false;
     }
-
-    return true;
+    else
+	return true;
 }
 
-bool Gateway::readMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
-{
-    uint16_t serverNum1, serverNum2, serverNum3;
-    string path1 = "firstfirstfirst" + path;
-    string path2 = "secondsecondsecond" + path;
-    string path3 = "thirdthirdthird" + path;
-
-    getServerNum(path1, serverNum1);
-    getServerNum(path2, serverNum2);
-    getServerNum(path3, serverNum3);
-
-    map<string, objInfo> result1;
-    map<string, objInfo> result2;
-    map<string, objInfo> result3;
-
-    uint8_t failcnt = 0;
-
-    if(isSameDc(serverNum1, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(serverArr->at(serverNum1).getState() && serverArr->at(serverNum1).getMessage("read file", path1, 0, result1)){
-	if(isSameDc(serverNum1, dcLabel))
-	    dataflowStat[0].size += result1.begin()->second.size;
-	else
-	    dataflowStat[1].size += result1.begin()->second.size;
-	return true;
-    }
-    
-    failcnt++;
-
-    if(isSameDc(serverNum2, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(serverArr->at(serverNum2).getState() && serverArr->at(serverNum2).getMessage("read file", path2, 0, result2)){
-	if(isSameDc(serverNum2, dcLabel))
-	    dataflowStat[0].size += result2.begin()->second.size;
-	else
-	    dataflowStat[1].size += result2.begin()->second.size;
-	return true;
-    }
-
-    failcnt++;
-
-    if(isSameDc(serverNum3, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(serverArr->at(serverNum3).getState() && serverArr->at(serverNum3).getMessage("read file", path3, 0, result3)){
-	if(isSameDc(serverNum3, dcLabel))
-	    dataflowStat[0].size += result3.begin()->second.size;
-	else
-	    dataflowStat[1].size += result3.begin()->second.size;
-	return true;
-    }
-
-    failcnt++;
-
-    if(failcnt == 3){
-	fprintf(stdout, "fail ! fail ! fail ! %s %d\n", __FILE__ , __LINE__);
-	return false;
-    }
-
-    return true;
-}
-
-bool Gateway::rmMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
+bool Gateway::writeMessage(const string path, const uint64_t size)
 {
     string path1 = "firstfirstfirst" + path;
     string path2 = "secondsecondsecond" + path;
     string path3 = "thirdthirdthird" + path;
 
     uint16_t serverNum1, serverNum2, serverNum3;
+
     getServerNum(path1, serverNum1);
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    map<string, objInfo> result;
-    serverArr->at(serverNum1).getMessage("delete file", path1, 0, result);
-    serverArr->at(serverNum2).getMessage("delete file", path2, 0, result);
-    serverArr->at(serverNum3).getMessage("delete file", path3, 0, result);
+    map<string, objInfo> useless_result;
 
-    if(isSameDc(serverNum1, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
+    uint8_t cnt = 0;
 
-    if(isSameDc(serverNum2, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum3, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    return true;
-}
-
-bool Gateway::lsMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
-{
-    map<string, objInfo> result;
-    uint16_t cnt = result.size();
-    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++){
-	if(iter->getState()){
-	    iter->getMessage("list directory", path, 0, result);
-	    if(isSameDc(iter->getNum(), dcLabel)){
-		dataflowStat[0].cnt++;
-		dataflowStat[0].size += messageSize;
-		dataflowStat[0].size += ((result.size() - cnt) * objEntrySize);
-		cnt = result.size();
-	    }
-	    else{
-		dataflowStat[1].cnt++;
-		dataflowStat[1].size += messageSize;
-		dataflowStat[1].size += ((result.size() - cnt) * objEntrySize);
-		cnt = result.size();
-	    }
+    if(serverArr->at(serverNum1).getState())
+    {
+	if(serverArr->at(serverNum1).getMessage("write file", path1, size, useless_result))
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum1).c_str(), MSGSIZE, size);
+	else
+	{
+	    fprintf(stdout, "# %u %u 0 #\n", serverNum1, MSGSIZE);
+	    cnt++;
 	}
     }
-    /*
-    fprintf(stderr, "%s\n", path.c_str());
-    for(map<string, objInfo>::iterator iter = result.begin(); iter != result.end(); iter++){
-	fprintf(stderr, "%s ", iter->first.c_str());
-	if(iter->second.dirOrFile)
-	    fprintf(stderr, "directory\n");
+    else
+	cnt++;
+
+    if(serverArr->at(serverNum2).getState())
+    {
+	if(serverArr->at(serverNum2).getMessage("write file", path2, size, useless_result))
+	    fprintf(stdout, "# %u %u %lu #\n", serverNum2, MSGSIZE, size);
 	else
-	    fprintf(stderr, "file %lu\n", iter->second.size);
+	{
+	    fprintf(stdout, "# %u %u 0 #\n", serverNum2, MSGSIZE);
+	    cnt++;
+	}
     }
-    */
+    else
+	cnt++;
+
+    if(serverArr->at(serverNum3).getState())
+    {
+	if(serverArr->at(serverNum3).getMessage("write file", path3, size, useless_result))
+	    fprintf(stdout, "# %u %u %lu #\n", serverNum3, MSGSIZE, size);
+	else
+	{
+	    fprintf(stdout, "# %u %u 0 #\n", serverNum3, MSGSIZE);
+	    cnt++;
+	}
+    }
+    else
+	cnt++;
+
+    if(cnt == 3)
+    {
+	fprintf(stdout, "ERROR!\n");
+	return false;
+    }
+    else
+	return true;
+}
+
+bool Gateway::readMessage(const string path)
+{
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
+
+    uint16_t serverNum1, serverNum2, serverNum3;
+
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
+
+    uint8_t cnt = 0;
+
+    if(serverArr->at(serverNum1).getState())
+    {
+	map<string, objInfo> result;
+	if(serverArr->at(serverNum1).getMessage("read file", path1, 0, result))
+	{
+	    fprintf(stdout, "# %u %u %lu #\n", serverNum1, MSGSIZE, result.begin()->second.size);
+	    return true;
+	}
+	else
+	{
+	    fprintf(stdout, "# %u %u 0 #\n", serverNum1, MSGSIZE);
+	    cnt++;
+	}
+    }
+    else
+    {
+	fprintf(stdout, "# %u #\n", serverNum1);
+	cnt++;
+    }
+
+    if(serverArr->at(serverNum2).getState())
+    {
+	map<string, objInfo> result;
+	if(serverArr->at(serverNum2).getMessage("read file", path2, 0, result))
+	{
+	    fprintf(stdout, "# %u %u %lu #\n", serverNum2, MSGSIZE, result.begin()->second.size);
+	    return true;
+	}
+	else
+	{
+	    fprintf(stdout, "# %u %u 0 #\n", serverNum2, MSGSIZE);
+	    cnt++;
+	}
+    }
+    else
+    {
+	fprintf(stdout, "# %u #\n", serverNum2);
+	cnt++;
+    }
+
+    if(serverArr->at(serverNum3).getState())
+    {
+	map<string, objInfo> result;
+	if(serverArr->at(serverNum3).getMessage("read file", path3, 0, result))
+	{
+	    fprintf(stdout, "# %u %u %lu #\n", serverNum3, MSGSIZE, result.begin()->second.size);
+	    return true;
+	}
+	else
+	{
+	    fprintf(stdout, "# %u %u 0 #\n", serverNum3, MSGSIZE);
+	    cnt++;
+	}
+    }
+    else
+    {
+	fprintf(stdout, "# %u #\n", serverNum3);
+	cnt++;
+    }
+
+    if(cnt == 3)
+    {
+	fprintf(stdout, "ERROR!\n");
+	fprintf(stderr, "ERROR!\n");
+	return false;
+    }
+    else
+	return true;
+}
+
+bool Gateway::rmMessage(const string path)
+{
+    string path1 = "firstfirstfirst" + path;
+    string path2 = "secondsecondsecond" + path;
+    string path3 = "thirdthirdthird" + path;
+
+    uint16_t serverNum1, serverNum2, serverNum3;
+
+    getServerNum(path1, serverNum1);
+    getServerNum(path2, serverNum2);
+    getServerNum(path3, serverNum3);
+
+    map<string, objInfo> useless_result;
+    uint8_t cnt = 0;
+
+    if(serverArr->at(serverNum1).getState())
+    {
+	if(!serverArr->at(serverNum1).getMessage("delete file", path1, 0, useless_result))
+	    cnt++;
+	fprintf(stdout, "# %u %u #\n", serverNum1, MSGSIZE);
+    }
+    else
+	cnt++;
+
+
+    if(serverArr->at(serverNum2).getState())
+    {
+	if(!serverArr->at(serverNum2).getMessage("delete file", path2, 0, useless_result))
+	    cnt++;
+	fprintf(stdout, "# %u %u #\n", serverNum2, MSGSIZE);
+    }
+    else
+	cnt++;
+
+    if(serverArr->at(serverNum3).getState())
+    {
+	if(!serverArr->at(serverNum3).getMessage("delete file", path3, 0, useless_result))
+	    cnt++;
+	fprintf(stdout, "# %u %u #\n", serverNum3, MSGSIZE);
+    }
+    else
+	cnt++;
+
+    if(cnt == 3)
+    {
+	fprintf(stdout, "ERROR!\n");
+	return false;
+    }
+    else
+	return true;
+}
+
+bool Gateway::lsMessage(const string path)
+{
+    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++)
+    {
+	map<string, objInfo> useless_result;
+	if(iter->getState())
+	{
+	    iter->getMessage("list directory", path, 0, useless_result);
+	    fprintf(stdout, "# %u %u %lu #\n", iter->getNum(), MSGSIZE, useless_result.size() * ENTRYSIZE);
+	}
+    }
     return true;
 }
 
-bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
+bool Gateway::mvMessage(const string path1, const string path2)
 {
     int i = 0;
     for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
     string temp = path1.substr(0, i);
 
     if(!temp.compare(path2)){
-	fprintf(stderr, "file already exists %s %s %s %d\n", path1.c_str(), path2.c_str(), __FILE__, __LINE__);
+	fprintf(stderr, "file %s already exists in server %s,  %s %d\n", path1.c_str(), path2.c_str(), __FILE__, __LINE__);
 	return true;
     }
 
@@ -487,184 +495,74 @@ bool Gateway::mvMessage(const string path1, const string path2, const uint8_t dc
     serverArr->at(serverNum22).getMessage("write file", path22, fileSize, result);
     serverArr->at(serverNum23).getMessage("write file", path23, fileSize, result);
 
-    //former server analysis
-    if(isSameDc(serverNum11, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum12, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum13, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    //later servver analysis
-    if(isSameDc(serverNum21, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum22, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum23, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    //communication between servers
-    if(isSameDc(serverNum11, serverNum21)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += fileSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += fileSize;
-    }
-
-    if(isSameDc(serverNum12, serverNum22)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += fileSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += fileSize;
-    }
-
-    if(isSameDc(serverNum13, serverNum23)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += fileSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += fileSize;
-    }
+    fprintf(stdout, "# %s %u %u %u %lu #\n", serverInterpret(serverNum11).c_str(), serverNum21, MSGSIZE, MSGSIZE, result1.begin()->second.size);
+    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum12, serverNum22, MSGSIZE, MSGSIZE, result2.begin()->second.size);
+    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum13, serverNum23, MSGSIZE, MSGSIZE, result3.begin()->second.size);
 }
 
-bool Gateway::mvrMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
+bool Gateway::mvrMessage(const string path1, const string path2)
 {
     int i = 0;
     for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
     string temp = path1.substr(0, i);
 
     if(!temp.compare(path2)){
-	fprintf(stderr, "directory already exists %s %s %s %d\n", path1.c_str(), path2.c_str(), __FILE__, __LINE__);
+	fprintf(stderr, "directory %s already exists in server %s,  %s %d\n", path1.c_str(), path2.c_str(), __FILE__, __LINE__);
 	return true;
     }
 
-    for(vector<Server>::iterator iter0 = serverArr->begin(); iter0 != serverArr->end(); iter0++){
-	if(iter0->getState()){
+    for(vector<Server>::iterator iter0 = serverArr->begin(); iter0 != serverArr->end(); iter0++)
+    {
+	if(iter0->getState())
+	{
 	    map<string, objInfo> result;
 	    iter0->getMessage("move directory", path1, 0, result);
-	    if(isSameDc(iter0->getNum(), dcLabel)){
-		dataflowStat[0].cnt++;
-		dataflowStat[0].size += messageSize;
-	    }
-	    else{
-		dataflowStat[1].cnt++;
-		dataflowStat[1].size += messageSize;
-	    }
-	    for(map<string, objInfo>::iterator iter1 = result.begin(); iter1 != result.end(); iter1++){
+	    for(map<string, objInfo>::iterator iter1 = result.begin(); iter1 != result.end(); iter1++)
+	    {
 		int i = 0;
 		for(i = 0 ; i < iter1->first.size() && iter1->first[i] != '/'; i++);
 		string temp1 = iter1->first.substr(0,i);
 
-		string temp2 = iter1->first.substr(path1.size() + i, iter1->first.size());
+		string temp2 = iter1->first.substr(temp.size() + i, iter1->first.size());
 
 		string newpath = temp1 + path2 + temp2;
 		uint16_t serverNum;
 		getServerNum(newpath, serverNum);
-		if(iter1->second.dirOrFile){
+		if(iter1->second.dirOrFile)
+		{
 		    map<string, objInfo> result1;
-		    serverArr->at(serverNum).getMessage("make directory", newpath, 0, result1);
-		    if(isSameDc(iter0->getNum(), serverNum)){
-			dataflowStat[0].cnt++;
-			dataflowStat[0].size += messageSize;
-		    }
-		    else{
-			dataflowStat[1].cnt++;
-			dataflowStat[1].size += messageSize;
-		    }
+		    if(!serverArr->at(serverNum).getMessage("make directory", newpath, 0, result1)) // it's possible that one of the destination directory has already existed one sub-directory sharing same name of source directory, just ignore it
+			fprintf(stderr, " %s %s\n", iter1->first.c_str(), newpath.c_str());
+		    fprintf(stdout, "# %u %u %u %u 0 #\n", iter0->getNum(), serverNum, MSGSIZE, MSGSIZE);
 		}
-		else{
+		else
+		{
 		    map<string, objInfo> result1;
 		    serverArr->at(serverNum).getMessage("write file", newpath, iter1->second.size, result1);
-		    if(isSameDc(iter0->getNum(), serverNum)){
-			dataflowStat[0].cnt++;
-			dataflowStat[0].size += messageSize;
-			dataflowStat[0].size += iter1->second.size;
-		    }
-		    else{
-			dataflowStat[1].cnt++;
-			dataflowStat[1].size += messageSize;
-			dataflowStat[1].size += iter1->second.size;
-		    }
+		    fprintf(stdout, "# %u %u %u %u %lu #\n", iter0->getNum(), serverNum, MSGSIZE, MSGSIZE, iter1->second.size);
 		}
-	    }
-	}
-    }
-}
-
-bool Gateway::rmrMessage(const string path, const uint8_t dcLabel, dataflow* dataflowStat)
-{
-    map<string, objInfo> result;
-    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++){
-	if(iter->getState()){
-	    iter->getMessage("delete directory", path, 0, result);
-	    if(isSameDc(iter->getNum(), dcLabel)){
-		dataflowStat[0].cnt++;
-		dataflowStat[0].size += messageSize;
-	    }
-	    else{
-		dataflowStat[1].cnt++;
-		dataflowStat[1].size += messageSize;
 	    }
 	}
     }
     return true;
 }
 
-bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dcLabel, dataflow* dataflowStat)
+bool Gateway::rmrMessage(const string path)
+{
+    map<string, objInfo> result;
+    for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++){
+	if(iter->getState()){
+	    iter->getMessage("delete directory", path, 0, result);
+	    fprintf(stdout, "# %u %u #\n", iter->getNum(), MSGSIZE);
+	    }
+	}
+    return true;
+}
+
+bool Gateway::cpMessage(const string path1, const string path2)
 {
     if(!path1.compare(path2)){
-	fprintf(stderr, "file %s does exist\n", path1.c_str());
+	fprintf(stderr, "file %s exists\n", path1.c_str());
 	return false;
     }
 
@@ -703,99 +601,13 @@ bool Gateway::cpMessage(const string path1, const string path2, const uint8_t dc
     serverArr->at(serverNum22).getMessage("write file", path22, fileSize, result);
     serverArr->at(serverNum23).getMessage("write file", path23, fileSize, result);
 
-    //former server analysis
-    if(isSameDc(serverNum11, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum12, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum13, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    //later servver analysis
-    if(isSameDc(serverNum21, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum22, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum23, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    //communication between servers
-    if(isSameDc(serverNum11, serverNum21)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += fileSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += fileSize;
-    }
-
-    if(isSameDc(serverNum12, serverNum22)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += fileSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += fileSize;
-    }
-
-    if(isSameDc(serverNum13, serverNum23)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-	dataflowStat[0].size += fileSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-	dataflowStat[1].size += fileSize;
-    }
+    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum11, serverNum21, MSGSIZE, MSGSIZE, result1.begin()->second.size);
+    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum12, serverNum22, MSGSIZE, MSGSIZE, result2.begin()->second.size);
+    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum13, serverNum23, MSGSIZE, MSGSIZE, result3.begin()->second.size);
 }
 
 
-bool Gateway::mkdirMessage(const string path, const uint8_t dcLabel, dataflow dataflowStat[2])
+bool Gateway::mkdirMessage(const string path)
 {
     string path1 = "firstfirstfirst" + path;
     string path2 = "secondsecondsecond" + path;
@@ -812,32 +624,9 @@ bool Gateway::mkdirMessage(const string path, const uint8_t dcLabel, dataflow da
     serverArr->at(serverNum2).getMessage("make directory", path2, 0, result);
     serverArr->at(serverNum3).getMessage("make directory", path3, 0, result);
 
-    if(isSameDc(serverNum1, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum2, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
-
-    if(isSameDc(serverNum3, dcLabel)){
-	dataflowStat[0].cnt++;
-	dataflowStat[0].size += messageSize;
-    }
-    else{
-	dataflowStat[1].cnt++;
-	dataflowStat[1].size += messageSize;
-    }
+    fprintf(stdout, "# %u %u #\n", serverNum1, MSGSIZE);
+    fprintf(stdout, "# %u %u #\n", serverNum2, MSGSIZE);
+    fprintf(stdout, "# %u %u #\n", serverNum3, MSGSIZE);
 
     return true;
 }

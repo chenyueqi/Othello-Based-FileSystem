@@ -9,21 +9,21 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ~/multi-dc/testcase/writeTestcase loadbalance > ../result/loadbalance
+	./main ../../testcase/writeTestcase loadbalance > ../result/loadbalance
 
 # 已经测试的
-#	./main ~/multi-dc/testcase/scalaTestcase check > ../result/scala
-#	./main ~/multi-dc/testcase/faultTolTestcase exit > ../result/faultTol
-#	./main ~/multi-dc/testcase/mvrTestcase mvr > ../result/mvr
-#	./main ~/multi-dc/testcase/rmrTestcase rmr > ../result/rmr
-#	./main ~/multi-dc/testcase/mkdirTestcase mkdir > ../result/mkdir
-#	./main ~/multi-dc/testcase/lsTestcase ls > ../result/ls
-#	./main ~/multi-dc/testcase/rmTestcase rm > ../result/rm
-#	./main ~/multi-dc/testcase/mvTestcase mv > ../result/mv
-#	./main ~/multi-dc/testcase/readTestcase read > ../result/read
-#	./main ~/multi-dc/testcase/cpTestcase cp > ../result/cp
-#	./main ~/multi-dc/testcase/touchTestcase touch > ../result/touch
-#	./main ~/multi-dc/testcase/writeTestcase write > ../result/write
+#	./main ../../testcase/scalaTestcase check > ../result/scala
+#	./main ../../testcase/faultTolTestcase exit > ../result/faultTol
+#	./main ../../testcase/mvrTestcase mvr > ../result/mvr
+#	./main ../../testcase/rmrTestcase rmr > ../result/rmr
+#	./main ../../testcase/mkdirTestcase mkdir > ../result/mkdir
+#	./main ../../testcase/lsTestcase ls > ../result/ls
+#	./main ../../testcase/rmTestcase rm > ../result/rm
+#	./main ../../testcase/mvTestcase mv > ../result/mv
+#	./main ../../testcase/readTestcase read > ../result/read
+#	./main ../../testcase/cpTestcase cp > ../result/cp
+#	./main ../../testcase/touchTestcase touch > ../result/touch
+#	./main ../../testcase/writeTestcase write > ../result/write
 
 
 clean: 

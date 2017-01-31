@@ -6,26 +6,27 @@ HFILES = $(shell find . -maxdepth 1 -name "*.h")
 OBJS = $(CFILES:.cc=.o)
 
 main: $(CFILES) $(HFILES)
-	$(CC) $(CFLAGS) -o main1 -D SYSTEM1 $(CFILES)
-	$(CC) $(CFLAGS) -o main2 -D SYSTEM2 $(CFILES)
+	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main1 ../../testcase/cpTestcase cp > ../result/cp
-	./main1 ../../testcase/mvTestcase mv > ../result/mv
-	./main1 ../../testcase/rmTestcase rm > ../result/rm
-	./main1 ../../testcase/mkdirTestcase mkdir > ../result/mkdir
-	./main1 ../../testcase/readTestcase read > ../result/read
-	./main1 ../../testcase/touchTestcase touch > ../result/touch
-#	./main1 ../../testcase/faultTolTestcase read > ../result/faultTol
-#	./main1 ../../testcase/writeTestcase write > ../result/write
-#	./main1 ../../testcase/rmrTestcase rmr > ../result/rmr
-#	./main1 ../../testcase/mvrTestcase mvr > ../result/mvr
-#	./main1 ../../testcase/lsTestcase ls > ../result/ls
-#	./main1 ../../testcase/scalaTestcase check > ../result/scala1
-#	./main2 ../../testcase/scalaTestcase check > ../result/scala2
+	./main ../../testcase/writeTestcase loadbalance > ../result/loadbalance
+
+# 已经测试的
+#	./main ../../testcase/scalaTestcase check > ../result/scala
+#	./main ../../testcase/faultTolTestcase exit > ../result/faultTol
+#	./main ../../testcase/mvrTestcase mvr > ../result/mvr
+#	./main ../../testcase/rmrTestcase rmr > ../result/rmr
+#	./main ../../testcase/mkdirTestcase mkdir > ../result/mkdir
+#	./main ../../testcase/lsTestcase ls > ../result/ls
+#	./main ../../testcase/rmTestcase rm > ../result/rm
+#	./main ../../testcase/mvTestcase mv > ../result/mv
+#	./main ../../testcase/readTestcase read > ../result/read
+#	./main ../../testcase/cpTestcase cp > ../result/cp
+#	./main ../../testcase/touchTestcase touch > ../result/touch
+#	./main ../../testcase/writeTestcase write > ../result/write
+
 
 clean: 
-	rm -rf main1
-	rm -rf main2
+	rm -rf main
 	rm -f $(OBJS) $(OBJS:.o=.d)
 	rm -f *~
