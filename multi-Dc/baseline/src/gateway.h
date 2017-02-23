@@ -152,7 +152,7 @@ bool Gateway::exitMessage(const uint32_t num)
 	uint32_t candidate = rand()% (serverArr->size());
 	if(serverArr->at(candidate).getState()){
 	    serverArr->at(candidate).setState(false);
-	    fprintf(stdout, "%u ", candidate);
+	    fprintf(stdout, "%s\n", serverInterpret(candidate).c_str());
 	    i++;
 	}
     }
@@ -172,9 +172,9 @@ bool Gateway::checkMessage(const string path, const uint64_t size)
     getServerNum(path2, serverNum2);
     getServerNum(path3, serverNum3);
 
-    fprintf(stdout, "# %u %lu #\n", serverNum1, size);
-    fprintf(stdout, "# %u %lu #\n", serverNum2, size);
-    fprintf(stdout, "# %u %lu #\n", serverNum3, size);
+    fprintf(stdout, "# %s %lu #\n", serverInterpret(serverNum1).c_str(), size);
+    fprintf(stdout, "# %s %lu #\n", serverInterpret(serverNum2).c_str(), size);
+    fprintf(stdout, "# %s %lu #\n", serverInterpret(serverNum3).c_str(), size);
     return true;
 }
 
@@ -198,7 +198,7 @@ bool Gateway::touchMessage(const string path)
     {
 	if(!serverArr->at(serverNum1).getMessage("touch file", path1, 0, useless_result))
 	    cnt++;
-	fprintf(stdout, "# %u %u #\n", serverNum1, MSGSIZE);
+	fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum1).c_str(), MSGSIZE);
     }
     else
 	cnt++;
@@ -207,7 +207,7 @@ bool Gateway::touchMessage(const string path)
     {
 	if(!serverArr->at(serverNum2).getMessage("touch file", path2, 0, useless_result))
 	    cnt++;
-	fprintf(stdout, "# %u %u #\n", serverNum2, MSGSIZE);
+	fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum2).c_str(), MSGSIZE);
     }
     else
 	cnt++;
@@ -216,7 +216,7 @@ bool Gateway::touchMessage(const string path)
     {
 	if(!serverArr->at(serverNum3).getMessage("touch file", path3, 0, useless_result))
 	    cnt++;
-	fprintf(stdout, "# %u %u #\n", serverNum3, MSGSIZE);
+	fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum3).c_str(), MSGSIZE);
     }
     else
 	cnt++;
@@ -252,7 +252,7 @@ bool Gateway::writeMessage(const string path, const uint64_t size)
 	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum1).c_str(), MSGSIZE, size);
 	else
 	{
-	    fprintf(stdout, "# %u %u 0 #\n", serverNum1, MSGSIZE);
+	    fprintf(stdout, "# %s %u 0 #\n", serverInterpret(serverNum1).c_str(), MSGSIZE);
 	    cnt++;
 	}
     }
@@ -262,10 +262,10 @@ bool Gateway::writeMessage(const string path, const uint64_t size)
     if(serverArr->at(serverNum2).getState())
     {
 	if(serverArr->at(serverNum2).getMessage("write file", path2, size, useless_result))
-	    fprintf(stdout, "# %u %u %lu #\n", serverNum2, MSGSIZE, size);
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum2).c_str(), MSGSIZE, size);
 	else
 	{
-	    fprintf(stdout, "# %u %u 0 #\n", serverNum2, MSGSIZE);
+	    fprintf(stdout, "# %s %u 0 #\n", serverInterpret(serverNum2).c_str(), MSGSIZE);
 	    cnt++;
 	}
     }
@@ -275,10 +275,10 @@ bool Gateway::writeMessage(const string path, const uint64_t size)
     if(serverArr->at(serverNum3).getState())
     {
 	if(serverArr->at(serverNum3).getMessage("write file", path3, size, useless_result))
-	    fprintf(stdout, "# %u %u %lu #\n", serverNum3, MSGSIZE, size);
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum3).c_str(), MSGSIZE, size);
 	else
 	{
-	    fprintf(stdout, "# %u %u 0 #\n", serverNum3, MSGSIZE);
+	    fprintf(stdout, "# %s %u 0 #\n", serverInterpret(serverNum3).c_str(), MSGSIZE);
 	    cnt++;
 	}
     }
@@ -313,18 +313,18 @@ bool Gateway::readMessage(const string path)
 	map<string, objInfo> result;
 	if(serverArr->at(serverNum1).getMessage("read file", path1, 0, result))
 	{
-	    fprintf(stdout, "# %u %u %lu #\n", serverNum1, MSGSIZE, result.begin()->second.size);
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum1).c_str(), MSGSIZE, result.begin()->second.size);
 	    return true;
 	}
 	else
 	{
-	    fprintf(stdout, "# %u %u 0 #\n", serverNum1, MSGSIZE);
+	    fprintf(stdout, "# %s %u 0 #\n", serverInterpret(serverNum1).c_str(), MSGSIZE);
 	    cnt++;
 	}
     }
     else
     {
-	fprintf(stdout, "# %u #\n", serverNum1);
+	fprintf(stdout, "# %s #\n", serverInterpret(serverNum1).c_str());
 	cnt++;
     }
 
@@ -333,18 +333,18 @@ bool Gateway::readMessage(const string path)
 	map<string, objInfo> result;
 	if(serverArr->at(serverNum2).getMessage("read file", path2, 0, result))
 	{
-	    fprintf(stdout, "# %u %u %lu #\n", serverNum2, MSGSIZE, result.begin()->second.size);
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum2).c_str(), MSGSIZE, result.begin()->second.size);
 	    return true;
 	}
 	else
 	{
-	    fprintf(stdout, "# %u %u 0 #\n", serverNum2, MSGSIZE);
+	    fprintf(stdout, "# %s %u 0 #\n", serverInterpret(serverNum2).c_str(), MSGSIZE);
 	    cnt++;
 	}
     }
     else
     {
-	fprintf(stdout, "# %u #\n", serverNum2);
+	fprintf(stdout, "# %s #\n", serverInterpret(serverNum2).c_str());
 	cnt++;
     }
 
@@ -353,18 +353,18 @@ bool Gateway::readMessage(const string path)
 	map<string, objInfo> result;
 	if(serverArr->at(serverNum3).getMessage("read file", path3, 0, result))
 	{
-	    fprintf(stdout, "# %u %u %lu #\n", serverNum3, MSGSIZE, result.begin()->second.size);
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(serverNum3).c_str(), MSGSIZE, result.begin()->second.size);
 	    return true;
 	}
 	else
 	{
-	    fprintf(stdout, "# %u %u 0 #\n", serverNum3, MSGSIZE);
+	    fprintf(stdout, "# %s %u 0 #\n", serverInterpret(serverNum3).c_str(), MSGSIZE);
 	    cnt++;
 	}
     }
     else
     {
-	fprintf(stdout, "# %u #\n", serverNum3);
+	fprintf(stdout, "# %s #\n", serverInterpret(serverNum3).c_str());
 	cnt++;
     }
 
@@ -397,7 +397,7 @@ bool Gateway::rmMessage(const string path)
     {
 	if(!serverArr->at(serverNum1).getMessage("delete file", path1, 0, useless_result))
 	    cnt++;
-	fprintf(stdout, "# %u %u #\n", serverNum1, MSGSIZE);
+	fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum1).c_str(), MSGSIZE);
     }
     else
 	cnt++;
@@ -407,7 +407,7 @@ bool Gateway::rmMessage(const string path)
     {
 	if(!serverArr->at(serverNum2).getMessage("delete file", path2, 0, useless_result))
 	    cnt++;
-	fprintf(stdout, "# %u %u #\n", serverNum2, MSGSIZE);
+	fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum2).c_str(), MSGSIZE);
     }
     else
 	cnt++;
@@ -416,7 +416,7 @@ bool Gateway::rmMessage(const string path)
     {
 	if(!serverArr->at(serverNum3).getMessage("delete file", path3, 0, useless_result))
 	    cnt++;
-	fprintf(stdout, "# %u %u #\n", serverNum3, MSGSIZE);
+	fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum3).c_str(), MSGSIZE);
     }
     else
 	cnt++;
@@ -438,7 +438,7 @@ bool Gateway::lsMessage(const string path)
 	if(iter->getState())
 	{
 	    iter->getMessage("list directory", path, 0, useless_result);
-	    fprintf(stdout, "# %u %u %lu #\n", iter->getNum(), MSGSIZE, useless_result.size() * ENTRYSIZE);
+	    fprintf(stdout, "# %s %u %lu #\n", serverInterpret(iter->getNum()).c_str(), MSGSIZE, useless_result.size() * ENTRYSIZE);
 	}
     }
     return true;
@@ -495,9 +495,9 @@ bool Gateway::mvMessage(const string path1, const string path2)
     serverArr->at(serverNum22).getMessage("write file", path22, fileSize, result);
     serverArr->at(serverNum23).getMessage("write file", path23, fileSize, result);
 
-    fprintf(stdout, "# %s %u %u %u %lu #\n", serverInterpret(serverNum11).c_str(), serverNum21, MSGSIZE, MSGSIZE, result1.begin()->second.size);
-    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum12, serverNum22, MSGSIZE, MSGSIZE, result2.begin()->second.size);
-    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum13, serverNum23, MSGSIZE, MSGSIZE, result3.begin()->second.size);
+    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(serverNum11).c_str(), serverInterpret(serverNum21).c_str(), MSGSIZE, MSGSIZE, result1.begin()->second.size);
+    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(serverNum12).c_str(), serverInterpret(serverNum22).c_str(), MSGSIZE, MSGSIZE, result2.begin()->second.size);
+    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(serverNum13).c_str(), serverInterpret(serverNum23).c_str(), MSGSIZE, MSGSIZE, result3.begin()->second.size);
 }
 
 bool Gateway::mvrMessage(const string path1, const string path2)
@@ -517,6 +517,11 @@ bool Gateway::mvrMessage(const string path1, const string path2)
 	{
 	    map<string, objInfo> result;
 	    iter0->getMessage("move directory", path1, 0, result);
+	    /*
+	    if(result.size() != 0)
+		fprintf(stdout, "# %s %u#\n", serverInterpret(iter0->getNum()).c_str(), result.size());
+		*/
+
 	    for(map<string, objInfo>::iterator iter1 = result.begin(); iter1 != result.end(); iter1++)
 	    {
 		int i = 0;
@@ -533,13 +538,13 @@ bool Gateway::mvrMessage(const string path1, const string path2)
 		    map<string, objInfo> result1;
 		    if(!serverArr->at(serverNum).getMessage("make directory", newpath, 0, result1)) // it's possible that one of the destination directory has already existed one sub-directory sharing same name of source directory, just ignore it
 			fprintf(stderr, " %s %s\n", iter1->first.c_str(), newpath.c_str());
-		    fprintf(stdout, "# %u %u %u %u 0 #\n", iter0->getNum(), serverNum, MSGSIZE, MSGSIZE);
+		    fprintf(stdout, "# %s %s %u %u 0 #\n", serverInterpret(iter0->getNum()).c_str(), serverInterpret(serverNum).c_str(), MSGSIZE, MSGSIZE);
 		}
 		else
 		{
 		    map<string, objInfo> result1;
 		    serverArr->at(serverNum).getMessage("write file", newpath, iter1->second.size, result1);
-		    fprintf(stdout, "# %u %u %u %u %lu #\n", iter0->getNum(), serverNum, MSGSIZE, MSGSIZE, iter1->second.size);
+		    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(iter0->getNum()).c_str(), serverInterpret(serverNum).c_str(), MSGSIZE, MSGSIZE, iter1->second.size);
 		}
 	    }
 	}
@@ -553,7 +558,7 @@ bool Gateway::rmrMessage(const string path)
     for(vector<Server>::iterator iter = serverArr->begin(); iter != serverArr->end(); iter++){
 	if(iter->getState()){
 	    iter->getMessage("delete directory", path, 0, result);
-	    fprintf(stdout, "# %u %u #\n", iter->getNum(), MSGSIZE);
+	    fprintf(stdout, "# %s %u #\n", serverInterpret(iter->getNum()).c_str(), MSGSIZE);
 	    }
 	}
     return true;
@@ -601,9 +606,9 @@ bool Gateway::cpMessage(const string path1, const string path2)
     serverArr->at(serverNum22).getMessage("write file", path22, fileSize, result);
     serverArr->at(serverNum23).getMessage("write file", path23, fileSize, result);
 
-    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum11, serverNum21, MSGSIZE, MSGSIZE, result1.begin()->second.size);
-    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum12, serverNum22, MSGSIZE, MSGSIZE, result2.begin()->second.size);
-    fprintf(stdout, "# %u %u %u %u %lu #\n", serverNum13, serverNum23, MSGSIZE, MSGSIZE, result3.begin()->second.size);
+    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(serverNum11).c_str(), serverInterpret(serverNum21).c_str(), MSGSIZE, MSGSIZE, result1.begin()->second.size);
+    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(serverNum12).c_str(), serverInterpret(serverNum22).c_str(), MSGSIZE, MSGSIZE, result2.begin()->second.size);
+    fprintf(stdout, "# %s %s %u %u %lu #\n", serverInterpret(serverNum13).c_str(), serverInterpret(serverNum23).c_str(), MSGSIZE, MSGSIZE, result3.begin()->second.size);
 }
 
 
@@ -624,9 +629,9 @@ bool Gateway::mkdirMessage(const string path)
     serverArr->at(serverNum2).getMessage("make directory", path2, 0, result);
     serverArr->at(serverNum3).getMessage("make directory", path3, 0, result);
 
-    fprintf(stdout, "# %u %u #\n", serverNum1, MSGSIZE);
-    fprintf(stdout, "# %u %u #\n", serverNum2, MSGSIZE);
-    fprintf(stdout, "# %u %u #\n", serverNum3, MSGSIZE);
+    fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum1).c_str(), MSGSIZE);
+    fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum2).c_str(), MSGSIZE);
+    fprintf(stdout, "# %s %u #\n", serverInterpret(serverNum3).c_str(), MSGSIZE);
 
     return true;
 }

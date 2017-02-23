@@ -37,10 +37,10 @@ int main(int argc, char* argv[])
 	    continue;
 	fprintf(stdout, "\n");
 	fprintf(stdout, "%s\n", message.c_str());
-	client.sendMessage(message);
+	client.send_msg(message);
 	serverArr[0].testDirFile();
 	fprintf(stdout, "\n");
-	client.testDirID();
+	client.test_obj_id();
 	fprintf(stdout, "\n");
     }
 }
@@ -57,7 +57,7 @@ bool init()
     central.setting(&serverArr, &gateWay);
     central.testOthello();
     //init gateway
-    gateWay.setting(&central, &serverArr);
+    gateWay.set_central_server_arr(&central, &serverArr);
     //init client
-    client.setGateWay(&gateWay);
+    client.set_gateway(&gateWay);
 }

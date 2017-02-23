@@ -184,6 +184,7 @@ bool Server::writeFile(const string path, const uint64_t size)
     }
     else{
 	//fprintf(stderr, "file %s has been exist\n", path.c_str());
+	/*
 	if(size > availCapacity){
 	    fprintf(stderr, "server capacity isn't enough %s %d\n", __FILE__, __LINE__);
 	    return false;
@@ -191,6 +192,8 @@ bool Server::writeFile(const string path, const uint64_t size)
 	iter->second.size += size;
 	useStorage(size);
 	return true;
+	*/
+	return false;
     }
     return false;
 }

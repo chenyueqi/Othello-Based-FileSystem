@@ -17,6 +17,14 @@
 	# ${serve list} #  
  check: # serverNum size #  
 
+# test target
+ It is obvious that some operations share similar performance. For example, read and write. Therefore, we just checked the following operations for evaluation
+ read: for file access
+ mv: for file move and cp
+ mvr: for directory mv
+ loadbalance:
+ faulttol:
+
 #simulation parameter
  throughput: 	1.93Gb/s (one-to-one Bcube topology)  
     		0.99Gb/s (one-to-one Tree topology)  

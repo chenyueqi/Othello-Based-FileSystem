@@ -9,7 +9,8 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-	./main ../../testcase/writeTestcase loadbalance > ../result/loadbalance
+	./main ../../testcase/mvTestcase mv > ../result/mv
+#	./main ../../testcase/writeTestcase loadbalance > ../result/loadbalance
 
 # 已经测试的
 #	./main ../../testcase/scalaTestcase check > ../result/scala
@@ -19,7 +20,6 @@ test: main
 #	./main ../../testcase/mkdirTestcase mkdir > ../result/mkdir
 #	./main ../../testcase/lsTestcase ls > ../result/ls
 #	./main ../../testcase/rmTestcase rm > ../result/rm
-#	./main ../../testcase/mvTestcase mv > ../result/mv
 #	./main ../../testcase/readTestcase read > ../result/read
 #	./main ../../testcase/cpTestcase cp > ../result/cp
 #	./main ../../testcase/touchTestcase touch > ../result/touch
