@@ -1,5 +1,5 @@
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef OTHELLO_COMMON_H_
+#define OTHELLO_COMMON_H_
 
 #include<cstring>
 
@@ -17,20 +17,10 @@ const uint8_t serverPerDcBit = 0x7; // server number per datacenter = 1<<serverP
 
 const uint8_t dcNum = 5;
 
-const uint16_t totalServer = (1 << (dcBit + serverPerDcBit));
-
 
 class Gateway;
 class Central;
 class Server;
 class Client;
-
-struct dataflow
-{
-    uint16_t cnt;
-    uint64_t size;
-};
-
-uint16_t datacenter[dcNum] = {1<< serverPerDcBit, 1<<(serverPerDcBit - 1), 1 << (serverPerDcBit - 2) , 1 << (serverPerDcBit -3), 1<< (serverPerDcBit-1)};
 
 #endif

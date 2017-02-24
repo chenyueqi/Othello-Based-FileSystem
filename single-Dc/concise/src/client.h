@@ -33,7 +33,7 @@ class Client {
    bool test_obj_id() {
      for (map<string, uint64_t>::iterator iter = obj_id_.begin(); 
 	  iter != obj_id_.end(); iter++)
-       fprintf(stdout, "%s %u\n", iter->first.c_str(), iter->second);
+       fprintf(stdout, "%s %lu\n", iter->first.c_str(), iter->second);
    }
 
  private:
@@ -62,7 +62,7 @@ class Client {
     for (vector<string>::iterator vec_iter = old_obj.begin(); 
 		 vec_iter != old_obj.end(); vec_iter++) {
 	  map<string, uint64_t>::iterator map_iter = obj_id_.find(*vec_iter);
-	  obj_id_.erase(iter1);
+	  obj_id_.erase(map_iter);
     }
 
     for (map<string, uint64_t>::iterator map_iter = new_obj.begin();
@@ -83,8 +83,8 @@ class Client {
    the resouces needed of each command is listed as follow:
 	ls:		path-self	id-self
 
-	touch:	path-self	id-father
-	mkdir:	path-self	id-father
+	touch:	path-self	path-father	id-father	
+	mkdir:	path-self	path-father	id-father
 
 	read:	path-self	id-self		path-father		id-father
 	rm: 	path-self	id-self		path-father 	id-father
@@ -112,10 +112,10 @@ bool Client::send_msg(string message) {
 		                id, 0, 0, 
 						new_obj, old_obj);
 	} else if (op == "touch" || op == "mkdir") {
-	  string path;
+	  string path, fa_path;
 	  getline(msg, path, ' ');
-	  uint64_t fa_id = get_id(get_fa_path(path));
-	  gateway_->get_msg(op, path, "", "", 
+	  uint64_t fa_id = get_id(fa_path = get_fa_path(path));
+	  gateway_->get_msg(op, path, fa_path, "", 
 		                0, fa_id, 0, 
 						new_obj, old_obj);
 	} else if (op == "read" || op == "rm" || op == "rmr") {
@@ -153,7 +153,7 @@ bool Client::send_msg(string message) {
 	  return false;
     }
 
-	update_obj_id(old_obj, new_obj);
+	update_obj_id(new_obj, old_obj);
 	return true;
 };
 

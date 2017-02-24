@@ -1,5 +1,17 @@
-#ifndef __CENTRAL_H__
-#define __CENTRAL_H__
+/*
+   centralized control platform is the core component of 
+   this design as it is responsible for allocating server for 
+   directories according to the allocation algorithm. Noted 
+   that centralized only process three commands: mkdir, rmr and 
+   mvr cause only these commands would modify intermediate nodes
+   of the filesystem tree.
+
+   To achieve the goal, centralized control platform is expected
+   to interact with different servers.
+*/
+
+#ifndef OTHELLO_CENTRAL_H__
+#define OTHELLO_CENTRAL_H__
 
 #include<iostream>
 #include<sstream>
@@ -8,57 +20,86 @@
 #include"common.h"
 #include<map>
 #include"server.h"
-#include"./Othello/othello.h"
+#include"Othello/othello.h"
 //#include"./OldOthello/othelloV7.h"
 using namespace std;
 
-class Central
-{
-    private:
-	uint64_t prekey;
-	uint16_t prevalue;
-	vector<Server>* serverArr;
-	Gateway* gateway;
-	//XXX othello version
-	Othello<uint64_t> oth;
-	// support up to 512 * 64 = 32,768 different directory at the same time
-	uint64_t idPool[512]; 
-	uint64_t getId();
+class Central {
+ public:
+   Central(vector<Server>* server_arr = NULL, Gateway* gateway = NULL) :
+	 server_arr_(server_arr), gateway_(gateway), prekey(0), prevalue(0), 
+	 oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)) {
+	   // pre-set the first bit of id pool for root directory
+	   id_pool_[0] = 0x8000000000000000; 
+	   for (int i = 1 ; i < 1024; i++)
+		 id_pool_[i] = 0;
+	 }
+
+   bool set_gateway_server_arr(vector<Server>* server_arr, Gateway* gateway) {
+	 server_arr_ = server_arr;
+	 gateway_ = gateway;
+   }
+
+   bool get_msg(const string op, 
+	            const string path, const string fa_path, const string des_path,
+				const uint64_t id, const uint64_t fa_id, const uint64_t des_id, 
+	            map<string, uint64_t> &new_obj, vector<string> &old_obj);
+   bool testOthello();
+
+ private:
+   uint64_t prekey;
+   uint16_t prevalue;
+   vector<Server>* server_arr_;
+   Gateway* gateway_;
+   Othello<uint64_t> oth;
+   uint64_t id_pool_[1024]; // support up to 1024 * 64 = 2^18 different objects
+   uint64_t get_id();
+
+   uint64_t get_server_num(uint64_t id, uint64_t *server_num) {
+	 return 0;
+   }
 	
-    private:
-	bool mkdirProcess(const string dirName, const uint64_t id, map<string, uint64_t> &newdir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool mvrProcess(const string path1, const string path2, const  uint64_t id1, const uint64_t id2,  map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool isPathExist(const string path, const uint16_t serverNum, map<string, uint16_t> &candidate, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt);
-	bool updateToGateway();
+   bool mkdir_proc(const string path, const string fa_path, const uint64_t fa_id,
+				   map<string, uint64_t> &new_obj, vector<string> &old_obj);
+   bool rmr_proc(const string path, const uint64_t id,
+	             const string fa_path, const uint64_t fa_id,
+				 map<string, uint64_t> &new_obj, vector<string> &old_obj);
+   bool mvr_proc(const string src_path, const uint64_t src_id,
+	             const string fa_src_path, const uint64_t fa_src_id,
+				 const string des_path, const uint64_t des_id,
+				 map<string, uint64_t> &new_obj, vector<string> &old_obj);
 
-    public:
-	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(0), oth(dcBit+serverPerDcBit, &prekey, 1, false, &prevalue, sizeof(uint64_t)){
-	    idPool[0] = 0x8000000000000000;
-	    for(int i = 1 ; i < 512; i++)
-		idPool[i] = 0;
-	}
-
-	/* XXX othello version
-	Central(vector<Server>* s = NULL, Gateway* g = NULL):serverArr(s), gateway(g), prekey(0), prevalue(0), oth(&prekey, &prevalue, 1){
-	    idPool[0] = 0x8000000000000000;
-	    for(int i = 1 ; i < 512; i++)
-		idPool[i] = 0;
-	}*/
-
-	bool setting(vector<Server>* s, Gateway* g){serverArr = s; gateway = g;}
-	bool getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime);
-	bool testOthello();
-	//TODO update othello and idBitMap to all friends and 
-	bool updateGateway();
+   bool update_othello_to_gateway() {
+	 return true; // TODO
+   }
+   uint64_t allocate_server(uint64_t *fa_server_num, uint64_t *server_num);
+   uint64_t allocate_id(uint64_t *fa_server_num);
+   void delete_id(uint64_t id);
 };
 
-uint64_t Central::getId()
+// TODO complete allocate algorithm for Yueqi Chen
+uint64_t Central::allocate_server(uint64_t *fa_server_num, uint64_t *server_num) {
+  return 0;
+}
+
+// TODO complete allocate id for Yueqi Chen
+uint64_t Central::allocate_id(uint64_t *fa_server_num) {
+  return 0;
+}
+
+// TODO complete delete id for Yueqi Chen
+void Central::delete_id(uint64_t id) {
+  return;
+}
+
+uint64_t Central::get_id()
 {
     uint64_t id = 0;
     int i = 0;
-    for( ; i < 512 && idPool[i] == 0xffffffffffffffff; i++)
+    for( ; i < 1024 && id_pool_[i] == 0xffffffffffffffff; i++)
+    // for( ; i < 1024 && id_pool_[i] == ~0L; i++)
 	id += 64;
-    uint64_t temp = idPool[i];
+    uint64_t temp = id_pool_[i];
 
     int j = 0;
     for(; j < 64; j++){
@@ -68,118 +109,83 @@ uint64_t Central::getId()
 
     id += j;
 
-    idPool[i] |= (0x8000000000000000>>j);
+    id_pool_[i] |= (0x8000000000000000>>j);
+    // id_pool_[i] |= (0x1UL<<63>>j);
     return id;
 }
 
-bool Central::testOthello()
-{
+bool Central::testOthello() {
     uint16_t key = 0;
-    fprintf(stderr, "%u %s %d\n", oth.queryInt(key), __FILE__, __LINE__);
-    //XXX othello version
-//    fprintf(stderr, "%u %s %d\n", oth.query(key), __FILE__, __LINE__);
+    fprintf(stderr, "%lu %s %d\n", oth.queryInt(key), __FILE__, __LINE__);
 }
 
-/*
- * support mkdir, recursive mv for directory
- */
-bool Central::getMessage(const string op, const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
-{
-    if(!op.compare("mkdir"))
-	return mkdirProcess(path1, id1, newdir, serverAcceCnt, dcAcceCnt, otherTime);
-    else if(!op.compare("mvr"))
-	return mvrProcess(path1, path2, id1, id2, newdir, olddir, serverAcceCnt, dcAcceCnt, otherTime);
-    else
+bool Central::get_msg(const string op, 
+	                  const string path, const string fa_path, const string des_path,
+				      const uint64_t id, const uint64_t fa_id, const uint64_t des_id, 
+	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  if(op == "mkdir")
+	return mkdir_proc(path, fa_path, fa_id, new_obj, old_obj);
+  else if (op == "rmr")
+	return rmr_proc(path, id, fa_path, fa_id, new_obj, old_obj);
+  else if (op == "mvr")
+	return mvr_proc(path, id, fa_path, fa_id, des_path, des_id,
+		            new_obj, old_obj);
+  else
 	return false;
 }
 
-bool Central::isPathExist(const string path, const uint16_t serverNum, map<string, uint16_t> &candidate, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt)
-{
-    stack<string> pathStack;
-    pathStack.push(path);
-    vector<FileBlock> useless;
-    
-    return serverArr->at(serverNum).getMessage("exist directory", pathStack, "", "", candidate, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
+bool Central:: mkdir_proc(const string path, const string fa_path, const uint64_t fa_id,
+	                      map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  uint64_t fa_server_num[3], server_num[3];
+  get_server_num(fa_id, fa_server_num);
+  allocate_server(fa_server_num, server_num);
+  uint64_t id = allocate_id(server_num);
+
+  // TODO send message to 3 father servers:  add new subdirectory entry
+  // path, fa_path, server_num
+  // TODO send message to 3 servers: add new directory
+  // path
+
+  new_obj.insert(pair<string, uint64_t>(path, id));
+  update_othello_to_gateway();
+  return true;
 }
 
-bool Central::mkdirProcess(const string dirName, const uint64_t id,  map<string, uint64_t> &newdir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
-{
-    //TODO get serverNum of dirName from othello using id
-    //XXX othello version
-    uint16_t serverNum = 0;
+bool Central::rmr_proc(const string path, const uint64_t id,
+	                   const string fa_path, const uint64_t fa_id,
+				       map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  uint64_t fa_server_num[3], server_num[3];
+  get_server_num(id, server_num);
+  get_server_num(fa_id, fa_server_num);
 
-    map<string, uint16_t> candidate;
+  // TODO send message to 3 father servers: remove subdirectory entry
+  // path, fa_path
+  // TODO send message to 3 servers: remove directory
+  // path, old_obj + obj_id
+  // TODO delete all related id: id of all objects in the targeted directory
 
-    isPathExist(dirName, serverNum, candidate, serverAcceCnt, dcAcceCnt);
-
-    stack<string> pathStack;
-    for(map<string, uint16_t>::iterator iter = candidate.begin(); iter != candidate.end(); iter++)
-	pathStack.push(iter->first);
-
-    map<string, uint16_t> resultMap;
-    vector<FileBlock> useless;
-    serverArr->at(serverNum).getMessage("make directory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
-
-    uint64_t newkey[20];
-    uint16_t newvalue[20];
-    int i = 0;
-    
-    //TODO
-    for(map<string, uint16_t>::iterator iter = resultMap.begin(); iter != resultMap.end(); iter++){
-	uint64_t id = getId();
-	newdir.insert(pair<string , uint64_t>(iter->first, id));
-	newkey[i] = id;
-	newvalue[i] = iter->second;
-	i++;
-    }
-
-    //XXX othello version
-//    oth.batchupdateOrInsert(newkey, newvalue, i, false);
-
-
-// TODO  for each result, change othelo,  build replication
-
-    return true;
+  update_othello_to_gateway();
+  return true;
 }
 
-bool Central::mvrProcess(const string path1, const string path2, const uint64_t id1, const uint64_t id2, map<string, uint64_t> &newdir, vector<string> &olddir, uint16_t &serverAcceCnt, uint8_t &dcAcceCnt, uint64_t &otherTime)
-{
-    uint16_t serverNum0 = 0;
-    uint16_t serverNum1 = 0;
-    uint16_t serverNum2 = 0;
-    //TODO 
-    //path0 = path1's father
-    //serverNum0 = get path0 from othello
-    //serverNum1 = get path1 from othello;
-    //serverNum2 = get path2 from othello;
-    
-    stack<string> pathStack;
-    pathStack.push(path1);
-    map<string, uint16_t> resultMap;
-    vector<FileBlock> useless;
+bool Central::mvr_proc(const string src_path, const uint64_t src_id,
+	                   const string fa_src_path, const uint64_t fa_src_id,
+				       const string des_path, const uint64_t des_id,
+				       map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  uint64_t src_server_num[3], fa_src_server_num[3], des_server_num[3];
+  get_server_num(src_id, src_server_num);
+  get_server_num(fa_src_id, fa_src_server_num);
+  get_server_num(des_id, des_server_num);
 
-    bool r1 = serverArr->at(serverNum0).getMessage("move directory", pathStack, "", "", resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
+  // TODO send message to 3 father src servers: remove subdirectory entry
+  // path, fa_path, 
+  // TODO send message to 3 src servers: rename recursively
+  // path, new_obj, old_obj
+  // TODO send message to 3 des servers: add new subdirectory entry
+  // path, fa_path, server_num
+  // TODO update all related id
 
-    if(!r1){
-	fprintf(stderr, "directory %s dose not exist %s %d\n", path1.c_str(), __FILE__, __LINE__);
-	return false;
-    }
-
-    pathStack.pop();
-
-    serverArr->at(serverNum1).getMessage("rename directory", pathStack, path1, path2, resultMap, false, 0, useless, 0, serverAcceCnt, dcAcceCnt);
-
-    int i = 0;
-    for(i = path1.size(); i > 1 && path1[i] != '/'; i--);
-    string temp = path1.substr(0,i);
-    string suffix = path1.substr(temp.length(), path1.length());
-    string newName = path2 + suffix;
-    pathStack.push(newName);
-    serverArr->at(serverNum2).getMessage("make directory", pathStack , "", "", resultMap, true, serverNum1, useless, 0, serverAcceCnt, dcAcceCnt);
-   
-    return true;
-    //TODO
-    //for each result in resultMap, add to othello and  build replication 
+  update_othello_to_gateway();
+  return true;
 }
-
 #endif

@@ -24,8 +24,10 @@ class Gateway {
  public:
    Gateway(Central* central = NULL, vector<Server>* server_arr = NULL) : 
 	       central_(central), server_arr_(server_arr) {}
-   bool set_central_server_arr(Central* p1, vector<Server>* p2) :
-           central_(central), server_arr_(server_arr) {}
+   bool set_central_server_arr(Central* central, vector<Server>* server_arr) {
+	 central_ = central;
+	 server_arr_ = server_arr;
+   }
    bool get_msg(const string op, 
 	            const string path, const string fa_path, const string des_path, 
 	            const uint64_t id, const uint64_t fa_id, const uint64_t des_id_or_size, 
@@ -36,42 +38,72 @@ class Gateway {
  private:
    Central* central_;
    vector<Server>* server_arr_;
-   // TODO Othello for Yueqi Chen
+   uint64_t get_server_num(const uint64_t id) {	 
+	 // TODO Othello for Yueqi Chen
+	 return 0;
+   }
+
+/*
+   all command could be classfied into two parts, one of which
+   is directly related to central while the rest could skip central:
+
+   central:
+   mkdir 	path-self	path-father	id-father
+   rmr		path-self	id-self		path-father 	id-father
+   mvr		path-src	id-src 		path-src-father	id-src-father 	path-des	id-des
+
+   server:
+   ls		path-self	id-self
+   touch	path-self	path-father	id-father
+   write	path-self	id-self		path-father		id-father	size
+   read		path-self	id-self		path-fathe		id-father
+   rm		path-self	id-self		path-fathe		id-father
+   mv		path-src 	id-src 		path-src-father id-src-father 	path-des 	id-des
+   cp		path-src 	id-src 		path-src-father id-src-father 	path-des 	id-des
+*/
+   bool mkdir_proc(const string path, const string fa_path, const uint64_t fa_id,
+	               map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+	 return central_->get_msg("mkdir", path, fa_path, "", 
+		                      0, fa_id, 0, 
+							  new_obj, old_obj);
+   }
+   bool rmr_proc(const string path, const uint64_t id, 
+	             const string fa_path, const uint64_t fa_id,
+	             map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+	 return central_->get_msg("rmr", path, fa_path, "",
+		                      id, fa_id, 0,
+							  new_obj, old_obj);
+   }
+   bool mvr_proc(const string src_path, const uint64_t src_id,
+	             const string fa_src_path, const uint64_t fa_src_id, 
+			 	 const string des_path, const uint64_t des_id,
+	             map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+	 return central_->get_msg("mvr", src_path, fa_src_path, des_path,
+		 				      src_id, fa_src_id, des_id,
+							  new_obj, old_obj);
+   }
 
    bool ls_proc(const string path, const uint64_t id);
-
-   bool touch_proc(const string path, const uint64_t fa_id
+   bool touch_proc(const string path, const string fa_path, const uint64_t fa_id,
 	               map<string, uint64_t> &new_obj, vector<string> &old_obj);
-   bool mkdir_proc(const string path, const uint64_t fa_id
-	               map<string, uint64_t> &new_obj, vector<string> &old_obj);
-
    bool read_proc(const string path, const uint64_t id, 
-	              const path fa_path, const uint64_t fa_id
+	              const string fa_path, const uint64_t fa_id,
 	              map<string, uint64_t> &new_obj, vector<string> &old_obj);
    bool rm_proc(const string path, const uint64_t id, 
-	            const path fa_path, const uint64_t fa_id
+	            const string fa_path, const uint64_t fa_id,
 	            map<string, uint64_t> &new_obj, vector<string> &old_obj);
-   bool rmr_proc(const string path, const uint64_t id, 
-	             const path fa_path, const uint64_t fa_id
-	             map<string, uint64_t> &new_obj, vector<string> &old_obj);
-
    bool write_proc(const string path, const uint64_t id, 
-	               const path fa_path, const uint64_t fa_id, 
-				   const uint64_t size
+	               const string fa_path, const uint64_t fa_id, 
+				   const uint64_t size,
 	               map<string, uint64_t> &new_obj, vector<string> &old_obj);
-
    bool mv_proc(const string src_path, const uint64_t src_id,
 	            const string fa_src_path, const uint64_t fa_src_id, 
-				const string des_path, const uint64_t des_id
+				const string des_path, const uint64_t des_id,
 	            map<string, uint64_t> &new_obj, vector<string> &old_obj);
    bool cp_proc(const string src_path, const uint64_t src_id,
 	            const string fa_src_path, const uint64_t fa_src_id, 
-				const string des_path, const uint64_t des_id
+				const string des_path, const uint64_t des_id,
 	            map<string, uint64_t> &new_obj, vector<string> &old_obj);
-   bool mvr_proc(const string src_path, const uint64_t src_id,
-	             const string fa_src_path, const uint64_t fa_src_id, 
-			 	 const string des_path, const uint64_t des_id
-	             map<string, uint64_t> &new_obj, vector<string> &old_obj);
 };
 
 bool Gateway::get_msg(const string op, 
@@ -81,9 +113,9 @@ bool Gateway::get_msg(const string op,
   if (op == "ls")
 	return ls_proc(path, id);
   else if (op == "touch")
-	return touch_proc(path, fa_id, new_obj, old_obj);
+	return touch_proc(path, fa_path, fa_id, new_obj, old_obj);
   else if (op == "mkdir")
-	return mkdir_proc(path, fa_id, new_obj, old_obj);
+	return mkdir_proc(path, fa_path, fa_id, new_obj, old_obj);
   else if (op == "read")
 	return read_proc(path, id, fa_path, fa_id, new_obj, old_obj);
   else if (op == "rm")
@@ -104,6 +136,51 @@ bool Gateway::get_msg(const string op,
 		           new_obj, old_obj);
   else 
 	return false; // never reach here
+}
+
+bool Gateway::ls_proc(const string path, const uint64_t id) {
+  uint64_t server_num = get_server_num(id);
+//  return server_arr_->at(server_num).get_msg(); // TODO 1
+}
+
+bool Gateway::touch_proc(const string path,const string fa_path, const uint64_t fa_id,
+	                     map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  uint64_t fa_server_num = get_server_num(fa_id);
+//  return server_arr_->at(fa_server_num).get_msg(); // TODO 1
+}
+
+bool Gateway::read_proc(const string path, const uint64_t id, 
+	                    const string fa_path, const uint64_t fa_id,
+	                    map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  uint64_t fa_server_num = get_server_num(fa_id);
+//  return server_arr_->at(fa_server_num).get_msg(); // TODO 1
+}
+
+bool Gateway::rm_proc(const string path, const uint64_t id, 
+	                  const string fa_path, const uint64_t fa_id,
+	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+
+}
+
+bool Gateway::write_proc(const string path, const uint64_t id, 
+	                     const string fa_path, const uint64_t fa_id, 
+				         const uint64_t size,
+	                     map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+
+}
+
+bool Gateway::mv_proc(const string src_path, const uint64_t src_id,
+	                  const string fa_src_path, const uint64_t fa_src_id, 
+				      const string des_path, const uint64_t des_id,
+	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+
+}
+
+bool Gateway::cp_proc(const string src_path, const uint64_t src_id,
+	                  const string fa_src_path, const uint64_t fa_src_id, 
+				      const string des_path, const uint64_t des_id,
+	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+
 }
 
 #endif
