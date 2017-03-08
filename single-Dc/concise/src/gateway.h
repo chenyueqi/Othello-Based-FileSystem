@@ -38,9 +38,9 @@ class Gateway {
  private:
    Central* central_;
    vector<Server>* server_arr_;
-   uint64_t get_server_num(const uint64_t id) {	 
+   void get_server_num(const uint64_t id, uint64_t *server_num) {	 
 	 // TODO Othello for Yueqi Chen
-	 return 0;
+	 return;
    }
 
 /*
@@ -83,6 +83,7 @@ class Gateway {
 							  new_obj, old_obj);
    }
 
+   // most parameters in these methods, such as id, fa_id shall be useless
    bool ls_proc(const string path, const uint64_t id);
    bool touch_proc(const string path, const string fa_path, const uint64_t fa_id,
 	               map<string, uint64_t> &new_obj, vector<string> &old_obj);
@@ -110,6 +111,7 @@ bool Gateway::get_msg(const string op,
 	                  const string path, const string fa_path, const string des_path, 
 	                  const uint64_t id, const uint64_t fa_id, const uint64_t des_id_or_size, 
 				      map<string, uint64_t> &new_obj, vector<string> &old_obj) {
+  // new_obj, old_obj shall be useless in gateway all the time
   if (op == "ls")
 	return ls_proc(path, id);
   else if (op == "touch")
@@ -139,48 +141,99 @@ bool Gateway::get_msg(const string op,
 }
 
 bool Gateway::ls_proc(const string path, const uint64_t id) {
-  uint64_t server_num = get_server_num(id);
-//  return server_arr_->at(server_num).get_msg(); // TODO 1
+  uint64_t server_num[3];
+  get_server_num(id, server_num);
+  //ignore failure situation as there is no failure in normal test
+  return server_arr_->at(server_num[0]).list_directory(path);
 }
 
 bool Gateway::touch_proc(const string path,const string fa_path, const uint64_t fa_id,
 	                     map<string, uint64_t> &new_obj, vector<string> &old_obj) {
-  uint64_t fa_server_num = get_server_num(fa_id);
-//  return server_arr_->at(fa_server_num).get_msg(); // TODO 1
+  uint64_t fa_server_num[3];
+  get_server_num(fa_id, fa_server_num);
+  for (int i = 0; i < 3; i++)
+	server_arr_->at(fa_server_num[i]).touch_file(fa_path, path);
+  return true;
 }
 
 bool Gateway::read_proc(const string path, const uint64_t id, 
 	                    const string fa_path, const uint64_t fa_id,
 	                    map<string, uint64_t> &new_obj, vector<string> &old_obj) {
-  uint64_t fa_server_num = get_server_num(fa_id);
-//  return server_arr_->at(fa_server_num).get_msg(); // TODO 1
+  uint64_t fa_server_num[3];
+  get_server_num(fa_id, fa_server_num);
+  uint8_t cnt = 0;
+  for (int i = 0; i < 3 ; i++) {
+	uint64_t size = 0;
+	if (!server_arr_->at(fa_server_num[0]).read_file(fa_path, path, size))// faile
+	  cnt++;
+  }
+  if (cnt == 3) {
+	fprintf(stdout, "FAIL!");
+	return false;
+  }
+  return true;
 }
 
 bool Gateway::rm_proc(const string path, const uint64_t id, 
 	                  const string fa_path, const uint64_t fa_id,
 	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
-
+  uint64_t fa_server_num[3];
+  get_server_num(fa_id, fa_server_num);
+  for (int i = 0; i < 3; i++)
+	server_arr_->at(fa_server_num[i]).delete_file(fa_path, path);
+  return true;
 }
 
 bool Gateway::write_proc(const string path, const uint64_t id, 
 	                     const string fa_path, const uint64_t fa_id, 
 				         const uint64_t size,
 	                     map<string, uint64_t> &new_obj, vector<string> &old_obj) {
-
+  uint64_t fa_server_num[3];
+  get_server_num(fa_id, fa_server_num);;
+  for (int i = 0; i < 3; i++)
+	server_arr_->at(fa_server_num[i]).write_file(fa_path, path, size);
+  return true;
 }
 
 bool Gateway::mv_proc(const string src_path, const uint64_t src_id,
 	                  const string fa_src_path, const uint64_t fa_src_id, 
 				      const string des_path, const uint64_t des_id,
 	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
-
+  uint64_t fa_src_server_num[3], des_server_num[3];
+  get_server_num(fa_src_id, fa_src_server_num);
+  get_server_num(des_id, des_server_num);
+  string new_path;
+  int i = 0;
+  for (i = src_path.size(); i > 1 && src_path[i] != '/'; i--) {}
+  new_path = des_path + src_path.substr(i, src_path.size());
+  for (int i = 0; i < 3 ; i++) {
+	map<string, uint64_t> old_obj_map;
+	server_arr_->at(fa_src_server_num[i]).delete_entry(fa_src_path, src_path, old_obj_map);
+	assert(old_obj_map.size()!=0);
+	server_arr_->at(old_obj_map.begin()->second).rename_file(src_path, new_path);
+	server_arr_->at(des_server_num[i]).new_entry(des_path, new_path, 
+												 old_obj_map.begin()->second, false);
+  }
+  return true;
 }
 
 bool Gateway::cp_proc(const string src_path, const uint64_t src_id,
 	                  const string fa_src_path, const uint64_t fa_src_id, 
 				      const string des_path, const uint64_t des_id,
 	                  map<string, uint64_t> &new_obj, vector<string> &old_obj) {
-
+  uint64_t fa_src_server_num[3], des_server_num[3];
+  get_server_num(fa_src_id, fa_src_server_num);
+  get_server_num(des_id, des_server_num);
+  string new_path;
+  int i = 0;
+  for (i = src_path.size(); i > 1 && src_path[i] != '/'; i--) {}
+  new_path = des_path + src_path.substr(i, src_path.size());
+  for (int i = 0; i < 3 ; i++) {
+	uint64_t size = 0;
+	server_arr_->at(fa_src_server_num[i]).read_file(fa_src_path, src_path, size);
+	server_arr_->at(des_server_num[i]).write_file(des_path, new_path, size);
+  }
+  return true;
 }
 
 #endif

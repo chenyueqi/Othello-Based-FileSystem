@@ -38,16 +38,21 @@ class Client {
 
  private:
    Gateway* gateway_;
-   // object is defined as file or directory
+   // object is defined as file or directory, currently we only
+   // store directory on the basis of simulation
    map<string, uint64_t> obj_id_; 
 
    // query obj-value pair for specified path
    uint64_t get_id(string path) {
      map<string, uint64_t>::iterator iter = obj_id_.find(path);
      if (iter == obj_id_.end()) {
-       fprintf(stderr, "object %s does not exist %s %d\n", 
+	   /*
+	   fprintf(stderr, "object %s does not exist %s %d\n", 
 	       path.c_str(), __FILE__, __LINE__);
-       return 0;
+		   */
+	   // if path could not be found in the current obj_id_,
+	   // it might be a file instead of directory
+       return 0; 
      }
      return iter->second;
    }

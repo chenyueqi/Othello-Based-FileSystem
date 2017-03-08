@@ -53,10 +53,10 @@ class Central {
    Gateway* gateway_;
    Othello<uint64_t> oth;
    uint64_t id_pool_[1024]; // support up to 1024 * 64 = 2^18 different objects
-   uint64_t get_id();
 
-   uint64_t get_server_num(uint64_t id, uint64_t *server_num) {
-	 return 0;
+   void get_server_num(uint64_t id, uint64_t *server_num) {
+	 // TODO query Othello for Yueqi Chen
+	 return;
    }
 	
    bool mkdir_proc(const string path, const string fa_path, const uint64_t fa_id,
@@ -72,8 +72,11 @@ class Central {
    bool update_othello_to_gateway() {
 	 return true; // TODO
    }
+   // allocate a server for one directory according its father server
    uint64_t allocate_server(uint64_t *fa_server_num, uint64_t *server_num);
-   uint64_t allocate_id(uint64_t *fa_server_num);
+   // alloacte a id for one directory, that is add id-server_num pair to othello
+   uint64_t allocate_id(uint64_t *server_num);
+   // detele a id since it's directory has been deleted, that's delete id-server_num pair from othello
    void delete_id(uint64_t id);
 };
 
@@ -82,17 +85,14 @@ uint64_t Central::allocate_server(uint64_t *fa_server_num, uint64_t *server_num)
   return 0;
 }
 
-// TODO complete allocate id for Yueqi Chen
-uint64_t Central::allocate_id(uint64_t *fa_server_num) {
-  return 0;
-}
 
 // TODO complete delete id for Yueqi Chen
 void Central::delete_id(uint64_t id) {
   return;
 }
 
-uint64_t Central::get_id()
+// TODO complete allocate id for Yueqi Chen
+uint64_t Central::allocate_id(uint64_t *server_num)
 {
     uint64_t id = 0;
     int i = 0;
@@ -111,6 +111,7 @@ uint64_t Central::get_id()
 
     id_pool_[i] |= (0x8000000000000000>>j);
     // id_pool_[i] |= (0x1UL<<63>>j);
+	// TODO update othello
     return id;
 }
 
@@ -141,12 +142,13 @@ bool Central:: mkdir_proc(const string path, const string fa_path, const uint64_
   allocate_server(fa_server_num, server_num);
   uint64_t id = allocate_id(server_num);
 
-  // TODO send message to 3 father servers:  add new subdirectory entry
-  // path, fa_path, server_num
-  // TODO send message to 3 servers: add new directory
-  // path
+  for (int i = 0; i < 3; i++) {
+	server_arr_->at(fa_server_num[i]).new_entry(fa_path, path, server_num[i], true);
+	server_arr_->at(server_num[i]).new_directory(path);
+  }
 
   new_obj.insert(pair<string, uint64_t>(path, id));
+  // add new key-value pair to Othello TODO
   update_othello_to_gateway();
   return true;
 }
@@ -157,12 +159,18 @@ bool Central::rmr_proc(const string path, const uint64_t id,
   uint64_t fa_server_num[3], server_num[3];
   get_server_num(id, server_num);
   get_server_num(fa_id, fa_server_num);
+  map<string, uint64_t> old_obj_map;
 
-  // TODO send message to 3 father servers: remove subdirectory entry
-  // path, fa_path
-  // TODO send message to 3 servers: remove directory
-  // path, old_obj + obj_id
-  // TODO delete all related id: id of all objects in the targeted directory
+  for (int i = 0; i < 3; i++) {
+	server_arr_->at(fa_server_num[i]).delete_entry(fa_path, path, old_obj_map);
+	server_arr_->at(server_num[i]).delete_directory(path, old_obj_map);
+  }
+
+  for (map<string, uint64_t>::iterator iter = old_obj_map.begin();
+	  iter != old_obj_map.end(); iter++) {
+	old_obj.push_back(iter->first);
+	// TODO delete all related id: id of all objects in the targeted directory
+  }
 
   update_othello_to_gateway();
   return true;
@@ -176,14 +184,25 @@ bool Central::mvr_proc(const string src_path, const uint64_t src_id,
   get_server_num(src_id, src_server_num);
   get_server_num(fa_src_id, fa_src_server_num);
   get_server_num(des_id, des_server_num);
+  string new_path;
+  int i;
+  for (i = src_path.size();  i > 1 && src_path[i] != '/'; i--) {}
+  new_path = des_path + src_path.substr(i, src_path.size());
 
-  // TODO send message to 3 father src servers: remove subdirectory entry
-  // path, fa_path, 
-  // TODO send message to 3 src servers: rename recursively
-  // path, new_obj, old_obj
-  // TODO send message to 3 des servers: add new subdirectory entry
-  // path, fa_path, server_num
-  // TODO update all related id
+  map<string, uint64_t> old_obj_map;
+
+  for (int i = 0; i < 3; i++) {
+	server_arr_->at(fa_src_server_num[i]).delete_entry(fa_src_path, src_path, old_obj_map);
+	server_arr_->at(src_server_num[i]).rename_directory(src_path, des_path, 
+														new_obj, old_obj_map);
+	server_arr_->at(des_server_num[i]).new_entry(des_path, new_path, src_server_num[i], true);
+  }
+
+  for (map<string, uint64_t>::iterator iter = old_obj_map.begin();
+	  iter != old_obj_map.end(); iter++) {
+	old_obj.push_back(iter->first);
+	// TODO modify all related id: id of all objects in the targeted directory
+  }
 
   update_othello_to_gateway();
   return true;

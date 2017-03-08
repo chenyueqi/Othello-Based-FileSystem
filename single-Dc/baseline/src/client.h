@@ -26,51 +26,40 @@ class Client
  */
 bool Client::sendMessage(string message)
 {
-    stringstream me(message);
-    string op;
-    getline(me, op, ' ');
+  stringstream me(message);
+  string op;
+  getline(me, op, ' ');
 
-    if(!op.compare("mkdir") || !op.compare("rm") || !op.compare("read") || !op.compare("touch") || !op.compare("rmr") || !op.compare("ls")){
+  if (op == "mkdir" || op == "rm" || op == "read" || 
+	  op == "touch" || op == "rmr"|| op == "ls") {
 	string path;	
 	getline(me, path, ' ');
 	gateWay->getMessage(op, path, "", 0);
-    }
-
-    else if(!op.compare("write")){
+  } else if(!op.compare("write")) {
 	string path;
 	getline(me, path, ' ');
 	uint64_t size = 0;
 	me>>size;
 	gateWay->getMessage(op, path, "", size);
-    }
-
-    else if(!op.compare("mv") || !op.compare("mvr") || !op.compare("cp")){
+  } else if(!op.compare("mv") || !op.compare("mvr") || !op.compare("cp")) {
 	string path1, path2;
 	getline(me, path1, ' ');
 	getline(me, path2, ' ');
 	gateWay->getMessage(op, path1, path2, 0);
-    }
-
-    else if(!op.compare("exit")){
+  } else if(!op.compare("exit")) {
 	uint32_t num;
 	me>>num;
 	gateWay->getMessage(op, "", "", num);
-    }
-
-    else if(!op.compare("check")){
+  } else if(!op.compare("check")) {
 	string path;
 	getline(me, path, ' ');
 	uint64_t size = 0;
 	me>>size;
 	gateWay->getMessage(op, path, "", size);
-    }
-
-    else{
+  } else {
 	fprintf(stderr, "INVALID operation %s %d\n", __FILE__, __LINE__);
 	return false;
-    }
-
-    return true;
+  }
 };
 
 #endif

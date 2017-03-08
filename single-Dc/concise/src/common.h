@@ -2,6 +2,7 @@
 #define OTHELLO_COMMON_H_
 
 #include<cstring>
+#include<assert.h>
 
 typedef unsigned char uint8_t;
 typedef unsigned short int uint16_t;

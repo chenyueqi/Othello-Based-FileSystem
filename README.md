@@ -1,4 +1,4 @@
-# Lazy Dictator
+# LeO - A FLexibLe FiLesystem for Data Center
 This is a simulation experiment to verify a design of multi-datacenter file system, which is based on Othello.
 
 The baseline is consistant hash method.
