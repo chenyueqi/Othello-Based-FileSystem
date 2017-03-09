@@ -127,14 +127,16 @@ bool Server::mkDir(const string path)
 
 bool Server::delDir(const string path)
 {
-    for(map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap. end(); iter++){
-	if(iter->first.find(path) != string::npos){
-	    freeStorage(iter->second.size);
+  	bool flag = false;
+    for (map<string, objInfo>::iterator iter = objMap.begin(); iter != objMap. end(); iter++) {
+  	  if (iter->first.find(path) != string::npos) {
+		flag = true;
+		freeStorage(iter->second.size);
 	    freeStorage(objEntrySize);
 	    objMap.erase(iter);
-	}
+  	  } 
     }
-    return true;
+    return flag;
 }
 
 bool Server::mvDir(const string path, map<string, objInfo> &result)
