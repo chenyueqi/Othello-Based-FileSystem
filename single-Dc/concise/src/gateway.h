@@ -39,7 +39,7 @@ class Gateway {
    Central* central_;
    vector<Server>* server_arr_;
    void get_server_num(const uint64_t id, uint64_t *server_num) {	 
-	 // TODO Othello for Yueqi Chen
+	 // TODO query Othello for Yueqi Chen
 	 return;
    }
 
@@ -164,7 +164,11 @@ bool Gateway::read_proc(const string path, const uint64_t id,
   uint8_t cnt = 0;
   for (int i = 0; i < 3 ; i++) {
 	uint64_t size = 0;
-	if (!server_arr_->at(fa_server_num[0]).read_file(fa_path, path, size))// faile
+	if (!server_arr_->at(fa_server_num[i]).get_state()){
+	  cnt++;
+	  continue;
+	}
+	if (!server_arr_->at(fa_server_num[i]).read_file(fa_path, path, size))// faile
 	  cnt++;
   }
   if (cnt == 3) {
@@ -208,11 +212,11 @@ bool Gateway::mv_proc(const string src_path, const uint64_t src_id,
   new_path = des_path + src_path.substr(i, src_path.size());
   for (int i = 0; i < 3 ; i++) {
 	map<string, uint64_t> old_obj_map;
-	server_arr_->at(fa_src_server_num[i]).delete_entry(fa_src_path, src_path, old_obj_map);
+	server_arr_->at(fa_src_server_num[i]).delete_file_entry(fa_src_path, src_path, old_obj_map);
 	assert(old_obj_map.size()!=0);
 	server_arr_->at(old_obj_map.begin()->second).rename_file(src_path, new_path);
-	server_arr_->at(des_server_num[i]).new_entry(des_path, new_path, 
-												 old_obj_map.begin()->second, false);
+	server_arr_->at(des_server_num[i]).new_file_entry(des_path, new_path, 
+												 	  old_obj_map.begin()->second);
   }
   return true;
 }

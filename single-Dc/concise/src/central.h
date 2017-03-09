@@ -143,8 +143,8 @@ bool Central:: mkdir_proc(const string path, const string fa_path, const uint64_
   uint64_t id = allocate_id(server_num);
 
   for (int i = 0; i < 3; i++) {
-	server_arr_->at(fa_server_num[i]).new_entry(fa_path, path, server_num[i], true);
-	server_arr_->at(server_num[i]).new_directory(path);
+	server_arr_->at(fa_server_num[i]).new_directory_entry(fa_path, path, server_num[i], id);
+	server_arr_->at(server_num[i]).new_directory(path, id);
   }
 
   new_obj.insert(pair<string, uint64_t>(path, id));
@@ -162,7 +162,7 @@ bool Central::rmr_proc(const string path, const uint64_t id,
   map<string, uint64_t> old_obj_map;
 
   for (int i = 0; i < 3; i++) {
-	server_arr_->at(fa_server_num[i]).delete_entry(fa_path, path, old_obj_map);
+	server_arr_->at(fa_server_num[i]).delete_directory_entry(fa_path, path, old_obj_map);
 	server_arr_->at(server_num[i]).delete_directory(path, old_obj_map);
   }
 
@@ -192,10 +192,10 @@ bool Central::mvr_proc(const string src_path, const uint64_t src_id,
   map<string, uint64_t> old_obj_map;
 
   for (int i = 0; i < 3; i++) {
-	server_arr_->at(fa_src_server_num[i]).delete_entry(fa_src_path, src_path, old_obj_map);
+	server_arr_->at(fa_src_server_num[i]).delete_directory_entry(fa_src_path, src_path, old_obj_map);
 	server_arr_->at(src_server_num[i]).rename_directory(src_path, des_path, 
 														new_obj, old_obj_map);
-	server_arr_->at(des_server_num[i]).new_entry(des_path, new_path, src_server_num[i], true);
+	server_arr_->at(des_server_num[i]).new_directory_entry(des_path, new_path, src_server_num[i], src_id);
   }
 
   for (map<string, uint64_t>::iterator iter = old_obj_map.begin();

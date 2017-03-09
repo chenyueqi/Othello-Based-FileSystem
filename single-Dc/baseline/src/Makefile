@@ -9,9 +9,9 @@ main: $(CFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o main $(CFILES)
 
 test: main
-#	./main ../../testcase/writeTestcase loadbalance > ../result/loadbalance
-#	./main ../../testcase/scalaTestcase check > ../result/scala
-#	./main ../../testcase/faultTolTestcase exit > ../result/faultTol
+	./main ../../testcase/writeTestcase loadbalance > ../result/loadbalance
+	./main ../../testcase/scalaTestcase check > ../result/scala
+	./main ../../testcase/faultTolTestcase exit > ../result/faultTol
 
 # 已经测试的
 #	./main ../../testcase/touchTestcase touch > ../result/touch
