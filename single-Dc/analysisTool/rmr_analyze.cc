@@ -16,16 +16,16 @@ int main(int argc, char* argv[]) {
 	string op;
 	newline >> op;
 
-	if (op == "ls") {
+	if (op == "rmr") {
 	  cnt++;
 	} else if (op =="#") {
 	  string info;
 	  newline >> info;
-	  if(info == "ls-hit")
+	  if(info == "rmr-hit")
 		hit_num++;
 	}
   }
-  fprintf(stdout, "ls: %u times\n", cnt);
+  fprintf(stdout, "rmr: %u times\n", cnt);
   fprintf(stdout, "access: 256 serverr\n");
   fprintf(stdout, "average hit: %f serverr\n", (double)hit_num/(double)cnt);
 

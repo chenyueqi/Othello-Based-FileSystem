@@ -38,10 +38,11 @@ int main(int argc, char* argv[])
 
     for(int i = 0; i < testUp; i++)
     {
-	unsigned int index = rand()%fileSet.size();
-	outfile << "cp " << fileSet[index] << " ";
-	index = rand()%fileSet.size();
-	outfile << fileSet[index] << '\n';
+	  outfile << "cp ";
+  	  unsigned int index = rand()%fileSet.size();
+  	  outfile << fileSet[index] << " ";
+  	  index = rand()%fileSet.size();
+  	  outfile << fileSet[index] << '\n';
     }
 
     infile.close();

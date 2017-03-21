@@ -24,8 +24,3 @@
  mvr: for directory mv
  loadbalance:
  faulttol:
-
-#simulation parameter
- throughput: 	1.93Gb/s (one-to-one Bcube topology)  
-    		0.99Gb/s (one-to-one Tree topology)  
-    		from "Bcube: A High Performance, Server-centric Network Architecture for Modular Data Centers"

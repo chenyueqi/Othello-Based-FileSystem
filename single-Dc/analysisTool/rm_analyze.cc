@@ -14,15 +14,15 @@ int main(int argc, char* argv[]) {
 	string term;
 	newline >> term;
 
-	if (term == "touch")
+	if (term == "rm")
 	    cnt++;
 	else if(term == "#") {
 	  string tmp;
 	  newline >> tmp;
-	  if (tmp == "touch-access")
+	  if (tmp == "rm-access")
 		access_time++;
 	}
   }
-  fprintf(stdout, "touch: %u times\n", cnt);
+  fprintf(stdout, "rm: %lu times\n", cnt);
   fprintf(stdout, "access: %lu per time\n", access_time/cnt);
 }

@@ -14,15 +14,15 @@ int main(int argc, char* argv[]) {
 	string term;
 	newline >> term;
 
-	if (term == "touch")
+	if (term == "mkdir")
 	    cnt++;
 	else if(term == "#") {
 	  string tmp;
 	  newline >> tmp;
-	  if (tmp == "touch-access")
+	  if (tmp == "mkdir-access")
 		access_time++;
 	}
   }
-  fprintf(stdout, "touch: %u times\n", cnt);
+  fprintf(stdout, "mkdir: %lu times\n", cnt);
   fprintf(stdout, "access: %lu per time\n", access_time/cnt);
 }

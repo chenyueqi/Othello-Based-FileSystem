@@ -18,14 +18,14 @@ int main(int argc, char* argv[]) {
     string term;
     new_line >> term;
 
-    if (term == "mvr") {
+    if (term == "cp") {
       cnt++;
     } else if(term == "#") {
 	  string info;
 	  new_line >> info;
-	  if(info == "mvr-access")
+	  if(info == "cp-access")
 		access_cnt++;
-	  if(info == "mvr-data-transmission") {
+	  if(info == "cp-data-transmission") {
 		unsigned long long this_time = 0;
 		new_line >> this_time;
 		unsigned long long old_trans = trans;
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 	  }
 	}
   }
-  fprintf(stdout, "mvr: %u times\n", cnt);
+  fprintf(stdout, "cp: %u times\n", cnt);
   fprintf(stdout, "access: %lu per time\n", access_cnt/cnt);
   fprintf(stdout, "trans data: %llu KB per time\n", trans/cnt/1024);
   return 0;

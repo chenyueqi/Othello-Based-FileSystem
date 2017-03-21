@@ -444,15 +444,15 @@ bool Gateway::cpMessage(const string path1, const string path2) {
 
 	fprintf(stdout, "# cp-access %u #\n", serverNum11);
 	fprintf(stdout, "# cp-access %u #\n", serverNum21);
-	fprintf(stdout, "# cp-data-transmission %lu #\n", result.begin()->second.size);
+	fprintf(stdout, "# cp-data-transmission %lu #\n", fileSize);
 
 	fprintf(stdout, "# cp-access %u #\n", serverNum12);
 	fprintf(stdout, "# cp-access %u #\n", serverNum22);
-	fprintf(stdout, "# cp-data-transmission %lu #\n", result.begin()->second.size);
+	fprintf(stdout, "# cp-data-transmission %lu #\n", fileSize);
 
 	fprintf(stdout, "# cp-access %u #\n", serverNum13);
 	fprintf(stdout, "# cp-access %u #\n", serverNum23);
-	fprintf(stdout, "# cp-data-transmission %lu #\n", result.begin()->second.size);
+	fprintf(stdout, "# cp-data-transmission %lu #\n", fileSize);
 }
 
 
