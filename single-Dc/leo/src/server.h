@@ -41,7 +41,9 @@ class Server{
 	 avail_capacity_(defaultCapacity), 
 	 used_capacity_(0),
 	 server_arr_(server_arr),
- 	 state_(true) {}
+ 	 state_(true),
+	 file_num_(0),
+	 directory_num_(0) {}
 
    uint64_t get_num() { return num_; }   
    uint64_t get_server_capacity() { return server_capacity_; }
@@ -49,6 +51,8 @@ class Server{
    uint64_t get_used_capacity() { return used_capacity_; }
    bool get_state() {return state_;}
    bool set_num(uint64_t num){num_ = num;}
+   bool set_state(bool state) {state_ = state;};
+   double get_fd_rate() {return (double)file_num_/(double)directory_num_;}
 
 
    // This is not a good design to explose all 
@@ -83,6 +87,8 @@ class Server{
    vector<Server>* server_arr_; //server cluster
    map<string, Obj> obj_map_;
    bool state_;
+   uint64_t file_num_;
+   uint64_t directory_num_;
 
    bool use_storage(uint64_t capacity) {
 	 avail_capacity_ -= capacity;

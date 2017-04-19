@@ -1,5 +1,8 @@
 CC=g++
-CFLAGS= -std=c++11 -Wno-unused-result
+GITVERSION= "no-version"
+
+CFLAGS= -g -std=c++11 -Wno-unused-result
+CFLAGS+= -DGITVERSION=\"$(GITVERSION)\"
 
 CFILES = $(shell find . -maxdepth 1 -name "*.cc")
 HFILES = $(shell find . -maxdepth 1 -name "*.h")

@@ -100,6 +100,8 @@ class Client {
 	mv:		path-src	id-src		path-src-father	id-src-father	path-des	id-des
 	cp:		path-src	id-src		path-src-father	id-src-father	path-des	id-des
 	mvr:	path-src 	id-src		path-src-father	id-src-father	path-des	id-des
+
+	exit: 	exit_num
 */
 bool Client::send_msg(string message) {
     stringstream msg(message);
@@ -151,7 +153,12 @@ bool Client::send_msg(string message) {
 	  gateway_->get_msg(op, src_path, fa_src_path, des_path, 
 		                src_id, fa_src_id, des_id, 
 						new_obj, old_obj);
-
+	} else if (op == "exit") {
+	  unsigned int exit_num;
+	  msg >> exit_num;
+	  gateway_->get_msg(op, "", "", "", 
+		                0, 0, exit_num, 
+						new_obj, old_obj);
 	} else {
 	  fprintf(stderr, "INVALID operation %s %d\n", 
 		      __FILE__, __LINE__);

@@ -105,6 +105,7 @@ class Gateway {
 	            const string fa_src_path, const uint64_t fa_src_id, 
 				const string des_path, const uint64_t des_id,
 	            map<string, uint64_t> &new_obj, vector<string> &old_obj);
+   bool exit_proc(const unsigned int exit_num);
 };
 
 bool Gateway::get_msg(const string op, 
@@ -136,6 +137,8 @@ bool Gateway::get_msg(const string op,
   else if (op == "mvr")
 	return mvr_proc(path, id, fa_path, fa_id, des_path, des_id_or_size, 
 		           new_obj, old_obj);
+  else if (op == "exit")
+	return exit_proc(des_id_or_size);
   else 
 	return false; // never reach here
 }
@@ -172,7 +175,7 @@ bool Gateway::read_proc(const string path, const uint64_t id,
 	  cnt++;
   }
   if (cnt == 3) {
-	fprintf(stdout, "FAIL!");
+	fprintf(stdout, "ERROR!");
 	return false;
   }
   return true;
@@ -237,6 +240,20 @@ bool Gateway::cp_proc(const string src_path, const uint64_t src_id,
 	server_arr_->at(fa_src_server_num[i]).read_file(fa_src_path, src_path, size);
 	server_arr_->at(des_server_num[i]).write_file(des_path, new_path, size);
   }
+  return true;
+}
+
+bool Gateway::exit_proc(const unsigned int exit_num) {
+  fprintf(stdout, "# TOTAL %u servers have exited abruptedly #\n#", exit_num);
+  for (int i = 0; i < exit_num;) {
+	uint32_t candidate = rand()%(server_arr_->size());
+	if (server_arr_->at(candidate).get_state()) {
+	  server_arr_->at(candidate).set_state(false);
+	  fprintf(stdout, "%u ", candidate);
+	  i++;
+	}
+  }
+  fprintf(stdout, " #\n");
   return true;
 }
 

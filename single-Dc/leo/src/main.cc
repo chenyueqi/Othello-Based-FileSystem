@@ -17,7 +17,29 @@ bool init();
 int main(int argc, char* argv[])
 {
   init();
+  central.test_othello(0);
+  uint64_t server_num[3];
+  server_num[0] = 23;
+  server_num[1] = 24;
+  server_num[2] = 25;
+  uint64_t id = central.allocate_id(server_num);
+  fprintf(stderr, "id: %u\n", id);
+  central.test_othello(id);
+  id = central.allocate_id(server_num);
+  fprintf(stderr, "id: %u\n", id);
+  central.test_othello(id);
+//  central.delete_id(0);
+  central.delete_id(id);
+  /*
+  server_num[0] = 43;
+  server_num[1] = 44;
+  server_num[2] = 45;
+  central.allocate_id(server_num);
+  fprintf(stderr, "id: %u\n", id);
+  central.test_othello(0);
 
+  */
+  /*
   ifstream file(argv[1], ios::in);
   string message;
 
@@ -32,12 +54,12 @@ int main(int argc, char* argv[])
 	client.test_obj_id();
 	fprintf(stdout, "\n");
     }
+	*/
 }
 
 bool init()
 {
-  uint64_t serverPerDc = 1<<serverPerDcBit;
-  for (int i = 0 ; i < serverPerDc * 1<<dcBit ; i++) {
+  for (int i = 0 ; i < server_num ; i++) {
 	Server s(i, defaultCapacity, &serverArr);
 	serverArr.push_back(s);
   }
